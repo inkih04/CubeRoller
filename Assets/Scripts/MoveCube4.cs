@@ -71,6 +71,7 @@ public class MoveCube : MonoBehaviour
             {
                 transform.RotateAround(rotPoint, rotAxis, amount * rotDir);
                 rotRemainder -= amount;
+                GetComponent<MovementCounter>().registerMove();
             }
         }
         else
