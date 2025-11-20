@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
+using TMPro;
 
 // MoveCube manages cube movement. WASD + Cursor keys rotate the cube in the
 // selected direction. If the cube is not grounded (has a tile under it), it falls.
@@ -24,11 +24,14 @@ public class MoveCube : MonoBehaviour
     LayerMask layerMask; 			// LayerMask to detect raycast hits with ground tiles only
 
     public AudioClip[] sounds; 		// Sounds to play when the cube rotates
-    public AudioClip fallSound; 	// Sound to play when the cube starts falling
-	
-	
-	// Determine if the cube is grounded by shooting a ray down from the cube location and 
-	// looking for hits with ground tiles
+    public AudioClip fallSound;     // Sound to play when the cube starts falling
+
+
+    // Determine if the cube is grounded by shooting a ray down from the cube location and 
+    // looking for hits with ground tiles
+
+    public TMP_Text movesText;
+    private int moveCount = 0;
 
     bool isGrounded()
     {
@@ -66,12 +69,16 @@ public class MoveCube : MonoBehaviour
             {
                 transform.RotateAround(rotPoint, rotAxis, rotRemainder * rotDir);
                 bMoving = false;
+                moveCount++;
+                if (movesText != null)
+                    movesText.text = "Moves: " + moveCount.ToString();
             }
             else
             {
                 transform.RotateAround(rotPoint, rotAxis, amount * rotDir);
                 rotRemainder -= amount;
-                GetComponent<MovementCounter>().registerMove();
+
+
             }
         }
         else
