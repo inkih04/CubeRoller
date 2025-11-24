@@ -228,6 +228,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MapCreation
   map: {fileID: 4900000, guid: 28cf6d1fb1568cb4bb508f4e3e9d31dc, type: 3}
   tile: {fileID: 7761140359684795549, guid: f8fd0d93878f1644ba84fc95bbf549c7, type: 3}
+  winTile: {fileID: 1755417507962730814, guid: f1a015ed9d57f724c8db43a4132c0f6e, type: 3}
 --- !u!4 &335594040
 Transform:
   m_ObjectHideFlags: 0
@@ -1366,9 +1367,10 @@ GameObject:
   - component: {fileID: 1402451730}
   - component: {fileID: 1402451729}
   - component: {fileID: 1402451733}
+  - component: {fileID: 1402451734}
   m_Layer: 0
   m_Name: Cube
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1486,7 +1488,35 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 6588f78fcb7456f4ab7840b863429068, type: 3}
   - {fileID: 8300000, guid: 6ac4dc07db529eb4fb121643c48573ea, type: 3}
   fallSound: {fileID: 8300000, guid: 6bdc6de39c0314b4eb1b1ab0e21ad992, type: 3}
-  movesText: {fileID: 0}
+  movesText: {fileID: 2001567583}
+  showOrientationDebug: 1
+--- !u!54 &1402451734
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1402451728}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 112
+  m_CollisionDetection: 0
 --- !u!1 &1587316928
 GameObject:
   m_ObjectHideFlags: 0
@@ -1743,8 +1773,6 @@ GameObject:
   - component: {fileID: 2001567582}
   - component: {fileID: 2001567584}
   - component: {fileID: 2001567583}
-  - component: {fileID: 2001567586}
-  - component: {fileID: 2001567585}
   m_Layer: 5
   m_Name: Contador
   m_TagString: Untagged
@@ -1870,30 +1898,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2001567581}
   m_CullTransparentMesh: 1
---- !u!114 &2001567585
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2001567581}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 31d61c6c87a92ec4a8316237235e521c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MovementCounter
---- !u!114 &2001567586
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2001567581}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9eff140b25d64601aabc6ba32245d099, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TMPro.Examples.SimpleScript
 --- !u!1 &2095185953
 GameObject:
   m_ObjectHideFlags: 0
