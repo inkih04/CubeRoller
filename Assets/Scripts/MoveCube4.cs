@@ -3,35 +3,78 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
 
-// MoveCube manages cube movement. WASD + Cursor keys rotate the cube in the
-// selected direction. If the cube is not grounded (has a tile under it), it falls.
-// Some events trigger corresponding sounds.
-
-
 public class MoveCube : MonoBehaviour
 {
-    InputAction moveAction; 		// Input action to capture player movement (WASD + cursor keys)
+    InputAction moveAction;
 
-    bool bMoving = false; 			// Is the object in the middle of moving?
-	bool bFalling = false; 			// Is the object falling?
-    
-	public float rotSpeed; 			// Rotation speed in degrees per second
-    public float fallSpeed; 		// Fall speed in the Y direction
+    bool bMoving = false;
+    bool bFalling = false;
 
-    Vector3 rotPoint, rotAxis; 		// Rotation movement is performed around the line formed by rotPoint and rotAxis
-	float rotRemainder; 			// The angle that the cube still has to rotate before the current movement is completed
-    float rotDir; 					// Has rotRemainder to be applied in the positive or negative direction?
-    LayerMask layerMask; 			// LayerMask to detect raycast hits with ground tiles only
+    public float rotSpeed;
+    public float fallSpeed;
 
-    public AudioClip[] sounds; 		// Sounds to play when the cube rotates
-    public AudioClip fallSound;     // Sound to play when the cube starts falling
+    Vector3 rotPoint, rotAxis;
+    float rotRemainder;
+    float rotDir;
+    LayerMask layerMask;
 
-
-    // Determine if the cube is grounded by shooting a ray down from the cube location and 
-    // looking for hits with ground tiles
-
+    public AudioClip[] sounds;
+    public AudioClip fallSound;
     public TMP_Text movesText;
     private int moveCount = 0;
+
+
+    public enum Orientation
+    {
+        VerticalY,
+        HorizontalX,
+        HorizontalZ
+    }
+
+    private Orientation currentOrientation = Orientation.HorizontalX;
+
+    [Header("Debug Orientación")]
+    public bool showOrientationDebug = true;
+
+
+    public bool IsVertical()
+    {
+        return currentOrientation == Orientation.VerticalY;
+    }
+
+    public Orientation GetOrientation()
+    {
+        return currentOrientation;
+    }
+
+    void DetectOrientation()
+    {
+        Vector3 up = transform.up;
+
+        float dotY = Mathf.Abs(Vector3.Dot(up, Vector3.up));
+        float dotX = Mathf.Abs(Vector3.Dot(up, Vector3.right));
+        float dotZ = Mathf.Abs(Vector3.Dot(up, Vector3.forward));
+
+        if (dotY > dotX && dotY > dotZ)
+        {
+            currentOrientation = Orientation.VerticalY;
+        }
+        else if (dotX > dotZ)
+        {
+            currentOrientation = Orientation.HorizontalX;
+        }
+        else
+        {
+            currentOrientation = Orientation.HorizontalZ;
+        }
+
+        // Debug visual
+        if (showOrientationDebug)
+        {
+            string orientText = currentOrientation == Orientation.VerticalY ? "VERTICAL ?" : "HORIZONTAL";
+            Debug.Log("Orientación: " + orientText);
+        }
+    }
 
     bool isGrounded()
     {
@@ -42,68 +85,58 @@ public class MoveCube : MonoBehaviour
         return false;
     }
 
-    // Start is called once after the MonoBehaviour is created
     void Start()
     {
-		// Find the move action by name. Done once in the Start method to avoid doing it every Update call.
         moveAction = InputSystem.actions.FindAction("Move");
-		
-		// Create the layer mask for ground tiles. Done once in the Start method to avoid doing it every Update call.
         layerMask = LayerMask.GetMask("Ground");
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if(bFalling)
+        if (!bMoving && !bFalling)
         {
-			// If we have fallen, we just move down
+            DetectOrientation();
+        }
+
+        if (bFalling)
+        {
             transform.Translate(Vector3.down * fallSpeed * Time.deltaTime, Space.World);
         }
         else if (bMoving)
         {
-			// If we are moving, we rotate around the line formed by rotPoint and rotAxis an angle depending on deltaTime
-			// If this angle is larger than the remainder, we stop the movement
             float amount = rotSpeed * Time.deltaTime;
-            if(amount > rotRemainder)
+            if (amount > rotRemainder)
             {
                 transform.RotateAround(rotPoint, rotAxis, rotRemainder * rotDir);
                 bMoving = false;
                 moveCount++;
                 if (movesText != null)
                     movesText.text = "Moves: " + moveCount.ToString();
+
+                DetectOrientation();
             }
             else
             {
                 transform.RotateAround(rotPoint, rotAxis, amount * rotDir);
                 rotRemainder -= amount;
-
-
             }
         }
         else
         {
-			// If we are not falling, nor moving, we check first if we should fall, then if we have to move
             if (!isGrounded())
             {
                 bFalling = true;
-				
-				// Play sound associated to falling
                 AudioSource.PlayClipAtPoint(fallSound, transform.position, 1.5f);
             }
-			
-			// Read the move action for input
+
             Vector2 dir = moveAction.ReadValue<Vector2>();
-            if(Math.Abs(dir.x) > 0.99 || Math.Abs(dir.y) > 0.99)
+            if (Math.Abs(dir.x) > 0.99 || Math.Abs(dir.y) > 0.99)
             {
-				// If the absolute value of one of the axis is larger than 0.99, the player wants to move in a non diagonal direction
                 bMoving = true;
-				
-				// We play a random movemnt sound
+
                 int iSound = UnityEngine.Random.Range(0, sounds.Length);
                 AudioSource.PlayClipAtPoint(sounds[iSound], transform.position, 1.0f);
-				
-				// Set rotDir, rotRemainder, rotPoint, and rotAxis according to the movement the player wants to make
+
                 if (dir.x > 0.99)
                 {
                     rotDir = -1.0f;
@@ -135,5 +168,6 @@ public class MoveCube : MonoBehaviour
             }
         }
     }
-
 }
+
+
