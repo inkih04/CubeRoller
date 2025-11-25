@@ -197,6 +197,11 @@ public class MoveCube : MonoBehaviour
     }
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        if (scene.name == "MainMenu")
+        {
+            return; 
+        }
+
         if (mode == LoadSceneMode.Single)
         {
             GameObject spawnPoint = GameObject.FindGameObjectWithTag("Respawn");
