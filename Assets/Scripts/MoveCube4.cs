@@ -1,11 +1,13 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using TMPro;
+using UnityEngine.SceneManagement;
 
 public class MoveCube : MonoBehaviour
 {
     InputAction moveAction;
+    public static MoveCube Instance;
 
     bool bMoving = false;
     bool bFalling = false;
@@ -89,6 +91,31 @@ public class MoveCube : MonoBehaviour
     {
         moveAction = InputSystem.actions.FindAction("Move");
         layerMask = LayerMask.GetMask("Ground");
+
+
+    }
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+        else
+        {
+            Destroy(gameObject);
+            return; 
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
     }
 
     void Update()
@@ -165,6 +192,26 @@ public class MoveCube : MonoBehaviour
                     rotAxis = new Vector3(1.0f, 0.0f, 0.0f);
                     rotPoint = transform.position + new Vector3(0.0f, -0.5f, -0.5f);
                 }
+            }
+        }
+    }
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (mode == LoadSceneMode.Single)
+        {
+            GameObject spawnPoint = GameObject.FindGameObjectWithTag("Respawn");
+
+            if (spawnPoint != null)
+            {
+                transform.position = spawnPoint.transform.position;
+                transform.rotation = spawnPoint.transform.rotation;
+
+                bMoving = false;
+                bFalling = false;
+            }
+            else
+            {
+                Debug.LogError("¡ERROR! No se encontró un SpawnPoint con el Tag 'Respawn' en la escena: " + scene.name);
             }
         }
     }

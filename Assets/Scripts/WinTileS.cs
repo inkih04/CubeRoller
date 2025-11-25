@@ -12,6 +12,7 @@ public class WinTileS : MonoBehaviour
         {
             Debug.Log("¡Game Over!");
             Debug.Log("Siguiente nivel sería: " + nextLevelName);
+            SceneManager.LoadScene(nextLevelName);
         }
     }
 }
