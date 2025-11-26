@@ -20,33 +20,37 @@ public class MoveCube : MonoBehaviour
     public AudioClip fallSound;
     public TMP_Text movesText;
 
-    // Estado interno
     private bool isMoving = false;
     private bool isFalling = false;
     private int moveCount = 0;
 
-    // Matemáticas de rotación
     private Vector3 pivot;
     private Vector3 rotAxis;
     private float degreesToRotate = 90f;
     private float currentRotated = 0f;
     private float rotationDirection = 0f;
 
-    // Componentes
     InputAction moveAction;
     LayerMask groundLayerMask;
     BoxCollider boxCollider;
     Rigidbody rb;
 
+    private Vector2 lastInput = Vector2.zero;
+    private bool inputProcessed = true;
+
     private void Awake()
     {
-        if (Instance == null) Instance = this;
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
         else { Destroy(gameObject); return; }
 
         boxCollider = GetComponent<BoxCollider>();
         rb = GetComponent<Rigidbody>();
 
-        // Configuración física: Kinematic para que no lo mueva Unity, sino nosotros
         rb.isKinematic = true;
         rb.useGravity = false;
         rb.constraints = RigidbodyConstraints.FreezeAll;
@@ -57,10 +61,41 @@ public class MoveCube : MonoBehaviour
             if (go != null) ghostPlayer = go;
         }
     }
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+    }
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name == "MainMenu")
+        {
+            return;
+        }
+
+        GameObject spawnPoint = GameObject.FindGameObjectWithTag("Respawn");
+
+        if (spawnPoint != null)
+        {
+            transform.position = spawnPoint.transform.position;
+            transform.rotation = spawnPoint.transform.rotation;
+
+            isMoving = false;
+            isFalling = false;
+            moveCount = 0;
+
+            if (movesText != null) movesText.text = "Moves: 0";
+        }
+        else
+        {
+            Debug.LogError("¡ERROR! No se encontró un SpawnPoint con el Tag 'Respawn' en la escena: " + scene.name);
+        }
+    }
 
     void Start()
     {
-        // 1. Configurar Input
         var playerInput = GetComponent<PlayerInput>();
         if (playerInput != null)
         {
@@ -81,7 +116,6 @@ public class MoveCube : MonoBehaviour
             moveAction.Enable();
         }
 
-        // 2. Configurar Layer del Suelo
         int groundLayerIndex = LayerMask.NameToLayer("Ground");
         if (groundLayerIndex == -1)
         {
@@ -112,6 +146,12 @@ public class MoveCube : MonoBehaviour
 
     void HandleInput()
     {
+        if (isMoving)
+        {
+            inputProcessed = false; 
+            return;
+        }
+
         if (!isGrounded())
         {
             StartFalling();
@@ -122,7 +162,17 @@ public class MoveCube : MonoBehaviour
 
         Vector2 input = moveAction.ReadValue<Vector2>();
 
-        if (Mathf.Abs(input.x) < 0.5f && Mathf.Abs(input.y) < 0.5f) return;
+        bool hasInput = Mathf.Abs(input.x) > 0.5f || Mathf.Abs(input.y) > 0.5f;
+
+        if (!hasInput)
+        {
+            inputProcessed = false;
+            return;
+        }
+
+        if (inputProcessed) return;
+
+        inputProcessed = true;
 
         Vector3 direction = Vector3.zero;
         if (Mathf.Abs(input.x) > Mathf.Abs(input.y))
@@ -135,19 +185,20 @@ public class MoveCube : MonoBehaviour
 
     void SimulateAndMove(Vector3 direction)
     {
-        // Calculamos pivote usando el Ghost si existe, o el player si no
-        Transform targetForCalculation = (ghostPlayer != null) ? ghostPlayer.transform : transform;
-
         if (ghostPlayer != null)
         {
-            // Movemos el ghost a nuestra posición actual para simular desde ahí
             ghostPlayer.transform.SetPositionAndRotation(transform.position, transform.rotation);
+
+
+            CalculatePivot(ghostPlayer.transform, direction);
+
+            ghostPlayer.transform.RotateAround(pivot, rotAxis, 90f * rotationDirection);
+        }
+        else
+        {
+            CalculatePivot(transform, direction);
         }
 
-        // Calculamos dónde estaría el pivote
-        CalculatePivot(targetForCalculation, direction);
-
-        // Iniciamos movimiento real
         StartRealRotation(direction);
     }
 
@@ -157,8 +208,6 @@ public class MoveCube : MonoBehaviour
         currentRotated = 0f;
         degreesToRotate = 90f;
 
-        // Recalculamos el pivote sobre el objeto real para asegurar
-        CalculatePivot(transform, dir);
 
         if (sounds != null && sounds.Length > 0)
             AudioSource.PlayClipAtPoint(sounds[UnityEngine.Random.Range(0, sounds.Length)], transform.position);
@@ -168,17 +217,16 @@ public class MoveCube : MonoBehaviour
     {
         if (boxCollider == null) return false;
 
-        // Medidas exactas del collider en este momento
         float distToBottom = boxCollider.bounds.extents.y;
         float distToEdge = 0f;
 
         if (Mathf.Abs(dir.x) > 0) distToEdge = boxCollider.bounds.extents.x;
         else distToEdge = boxCollider.bounds.extents.z;
 
-        // Definimos el punto de rotación en el suelo
+
         pivot = targetTransform.position + (dir * distToEdge) + (Vector3.down * distToBottom);
 
-        // Definimos el eje de rotación
+
         rotAxis = Vector3.Cross(Vector3.up, dir);
         rotationDirection = 1f;
 
@@ -191,38 +239,44 @@ public class MoveCube : MonoBehaviour
 
         if (currentRotated + step > degreesToRotate)
         {
-            // Fin del movimiento
             step = degreesToRotate - currentRotated;
             transform.RotateAround(pivot, rotAxis, step * rotationDirection);
             isMoving = false;
 
-            // Solo redondeamos la rotación para que quede plano (0, 90, 180...)
-            // PERO NO TOCAMOS LA POSICIÓN (No Grid Snap)
-            Vector3 euler = transform.eulerAngles;
-            euler.x = Mathf.Round(euler.x / 90) * 90;
-            euler.y = Mathf.Round(euler.y / 90) * 90;
-            euler.z = Mathf.Round(euler.z / 90) * 90;
-            transform.rotation = Quaternion.Euler(euler);
+            if (ghostPlayer != null)
+            {
+                transform.position = ghostPlayer.transform.position;
+                transform.rotation = ghostPlayer.transform.rotation;
+            }
+            else
+            {
+                Vector3 euler = transform.eulerAngles;
+                euler.x = Mathf.Round(euler.x / 90) * 90;
+                euler.y = Mathf.Round(euler.y / 90) * 90;
+                euler.z = Mathf.Round(euler.z / 90) * 90;
+                transform.rotation = Quaternion.Euler(euler);
+            }
 
             moveCount++;
             if (movesText != null) movesText.text = "Moves: " + moveCount;
         }
         else
         {
-            // Durante el movimiento
             transform.RotateAround(pivot, rotAxis, step * rotationDirection);
             currentRotated += step;
         }
     }
 
+
     bool isGrounded()
     {
         if (boxCollider == null) return false;
 
-        // Usamos el "Rayo desde el cielo" para que no falle nunca la detección
+        if (isMoving) return true;
+
         float halfHeight = boxCollider.bounds.extents.y;
-        Vector3 origin = transform.position + Vector3.up * 1.0f;
-        float totalDist = 1.0f + halfHeight + 0.2f;
+        Vector3 origin = transform.position;
+        float totalDist = halfHeight + 0.2f;
 
         Debug.DrawRay(origin, Vector3.down * totalDist, Color.cyan);
 
