@@ -4,96 +4,39 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
+[RequireComponent(typeof(BoxCollider))]
+[RequireComponent(typeof(Rigidbody))]
 public class MoveCube : MonoBehaviour
 {
-    InputAction moveAction;
     public static MoveCube Instance;
 
-    bool bMoving = false;
-    bool bFalling = false;
+    [Header("Configuración Bloxorz")]
+    public float rotSpeed = 300f;
+    public float fallSpeed = 10f;
 
-    public float rotSpeed;
-    public float fallSpeed;
-
-    Vector3 rotPoint, rotAxis;
-    float rotRemainder;
-    float rotDir;
-    LayerMask layerMask;
-
+    [Header("Referencias")]
+    public GameObject ghostPlayer;
     public AudioClip[] sounds;
     public AudioClip fallSound;
     public TMP_Text movesText;
+
+    private bool isMoving = false;
+    private bool isFalling = false;
     private int moveCount = 0;
 
+    private Vector3 pivot;
+    private Vector3 rotAxis;
+    private float degreesToRotate = 90f;
+    private float currentRotated = 0f;
+    private float rotationDirection = 0f;
 
-    public enum Orientation
-    {
-        VerticalY,
-        HorizontalX,
-        HorizontalZ
-    }
+    InputAction moveAction;
+    LayerMask groundLayerMask;
+    BoxCollider boxCollider;
+    Rigidbody rb;
 
-    private Orientation currentOrientation = Orientation.HorizontalX;
-
-    [Header("Debug Orientación")]
-    public bool showOrientationDebug = true;
-
-
-    public bool IsVertical()
-    {
-        return currentOrientation == Orientation.VerticalY;
-    }
-
-    public Orientation GetOrientation()
-    {
-        return currentOrientation;
-    }
-
-    void DetectOrientation()
-    {
-        Vector3 up = transform.up;
-
-        float dotY = Mathf.Abs(Vector3.Dot(up, Vector3.up));
-        float dotX = Mathf.Abs(Vector3.Dot(up, Vector3.right));
-        float dotZ = Mathf.Abs(Vector3.Dot(up, Vector3.forward));
-
-        if (dotY > dotX && dotY > dotZ)
-        {
-            currentOrientation = Orientation.VerticalY;
-        }
-        else if (dotX > dotZ)
-        {
-            currentOrientation = Orientation.HorizontalX;
-        }
-        else
-        {
-            currentOrientation = Orientation.HorizontalZ;
-        }
-
-        // Debug visual
-        if (showOrientationDebug)
-        {
-            string orientText = currentOrientation == Orientation.VerticalY ? "VERTICAL ?" : "HORIZONTAL";
-            Debug.Log("Orientación: " + orientText);
-        }
-    }
-
-    bool isGrounded()
-    {
-        RaycastHit hit;
-        if (Physics.Raycast(transform.position, Vector3.down, out hit, 1.0f, layerMask))
-            return true;
-
-        return false;
-    }
-
-    void Start()
-    {
-        moveAction = InputSystem.actions.FindAction("Move");
-        layerMask = LayerMask.GetMask("Ground");
-
-
-    }
+    private Vector2 lastInput = Vector2.zero;
+    private bool inputProcessed = true;
 
     private void Awake()
     {
@@ -103,13 +46,21 @@ public class MoveCube : MonoBehaviour
             DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
-        else
+        else { Destroy(gameObject); return; }
+
+        boxCollider = GetComponent<BoxCollider>();
+        rb = GetComponent<Rigidbody>();
+
+        rb.isKinematic = true;
+        rb.useGravity = false;
+        rb.constraints = RigidbodyConstraints.FreezeAll;
+
+        if (ghostPlayer == null)
         {
-            Destroy(gameObject);
-            return; 
+            GameObject go = GameObject.FindWithTag("GhostPlayer");
+            if (go != null) ghostPlayer = go;
         }
     }
-
     private void OnDestroy()
     {
         if (Instance == this)
@@ -117,109 +68,233 @@ public class MoveCube : MonoBehaviour
             SceneManager.sceneLoaded -= OnSceneLoaded;
         }
     }
-
-    void Update()
-    {
-        if (!bMoving && !bFalling)
-        {
-            DetectOrientation();
-        }
-
-        if (bFalling)
-        {
-            transform.Translate(Vector3.down * fallSpeed * Time.deltaTime, Space.World);
-        }
-        else if (bMoving)
-        {
-            float amount = rotSpeed * Time.deltaTime;
-            if (amount > rotRemainder)
-            {
-                transform.RotateAround(rotPoint, rotAxis, rotRemainder * rotDir);
-                bMoving = false;
-                moveCount++;
-                if (movesText != null)
-                    movesText.text = "Moves: " + moveCount.ToString();
-
-                DetectOrientation();
-            }
-            else
-            {
-                transform.RotateAround(rotPoint, rotAxis, amount * rotDir);
-                rotRemainder -= amount;
-            }
-        }
-        else
-        {
-            if (!isGrounded())
-            {
-                bFalling = true;
-                AudioSource.PlayClipAtPoint(fallSound, transform.position, 1.5f);
-            }
-
-            Vector2 dir = moveAction.ReadValue<Vector2>();
-            if (Math.Abs(dir.x) > 0.99 || Math.Abs(dir.y) > 0.99)
-            {
-                bMoving = true;
-
-                int iSound = UnityEngine.Random.Range(0, sounds.Length);
-                AudioSource.PlayClipAtPoint(sounds[iSound], transform.position, 1.0f);
-
-                if (dir.x > 0.99)
-                {
-                    rotDir = -1.0f;
-                    rotRemainder = 90.0f;
-                    rotAxis = new Vector3(0.0f, 0.0f, 1.0f);
-                    rotPoint = transform.position + new Vector3(0.5f, -0.5f, 0.0f);
-                }
-                else if (dir.x < -0.99)
-                {
-                    rotDir = 1.0f;
-                    rotRemainder = 90.0f;
-                    rotAxis = new Vector3(0.0f, 0.0f, 1.0f);
-                    rotPoint = transform.position + new Vector3(-0.5f, -0.5f, 0.0f);
-                }
-                else if (dir.y > 0.99)
-                {
-                    rotDir = 1.0f;
-                    rotRemainder = 90.0f;
-                    rotAxis = new Vector3(1.0f, 0.0f, 0.0f);
-                    rotPoint = transform.position + new Vector3(0.0f, -0.5f, 0.5f);
-                }
-                else if (dir.y < -0.99)
-                {
-                    rotDir = -1.0f;
-                    rotRemainder = 90.0f;
-                    rotAxis = new Vector3(1.0f, 0.0f, 0.0f);
-                    rotPoint = transform.position + new Vector3(0.0f, -0.5f, -0.5f);
-                }
-            }
-        }
-    }
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (scene.name == "MainMenu")
         {
-            return; 
+            return;
         }
 
-        if (mode == LoadSceneMode.Single)
+        GameObject spawnPoint = GameObject.FindGameObjectWithTag("Respawn");
+
+        if (spawnPoint != null)
         {
-            GameObject spawnPoint = GameObject.FindGameObjectWithTag("Respawn");
+            transform.position = spawnPoint.transform.position;
+            transform.rotation = spawnPoint.transform.rotation;
 
-            if (spawnPoint != null)
+            isMoving = false;
+            isFalling = false;
+            moveCount = 0;
+
+            if (movesText != null) movesText.text = "Moves: 0";
+        }
+        else
+        {
+            Debug.LogError("¡ERROR! No se encontró un SpawnPoint con el Tag 'Respawn' en la escena: " + scene.name);
+        }
+    }
+
+    void Start()
+    {
+        var playerInput = GetComponent<PlayerInput>();
+        if (playerInput != null)
+        {
+            moveAction = playerInput.actions["Move"];
+        }
+        else
+        {
+            moveAction = new InputAction("Move", binding: "<Gamepad>/leftStick");
+            moveAction.AddCompositeBinding("2DVector")
+                .With("Up", "<Keyboard>/w")
+                .With("Down", "<Keyboard>/s")
+                .With("Left", "<Keyboard>/a")
+                .With("Right", "<Keyboard>/d")
+                .With("Up", "<Keyboard>/upArrow")
+                .With("Down", "<Keyboard>/downArrow")
+                .With("Left", "<Keyboard>/leftArrow")
+                .With("Right", "<Keyboard>/rightArrow");
+            moveAction.Enable();
+        }
+
+        int groundLayerIndex = LayerMask.NameToLayer("Ground");
+        if (groundLayerIndex == -1)
+        {
+            groundLayerMask = LayerMask.GetMask("Default");
+        }
+        else
+        {
+            groundLayerMask = LayerMask.GetMask("Ground");
+        }
+    }
+
+    void Update()
+    {
+        if (isFalling)
+        {
+            transform.Translate(Vector3.down * fallSpeed * Time.deltaTime, Space.World);
+            return;
+        }
+
+        if (isMoving)
+        {
+            PerformRotation();
+            return;
+        }
+
+        HandleInput();
+    }
+
+    void HandleInput()
+    {
+        if (isMoving)
+        {
+            inputProcessed = false; 
+            return;
+        }
+
+        if (!isGrounded())
+        {
+            StartFalling();
+            return;
+        }
+
+        if (moveAction == null) return;
+
+        Vector2 input = moveAction.ReadValue<Vector2>();
+
+        bool hasInput = Mathf.Abs(input.x) > 0.5f || Mathf.Abs(input.y) > 0.5f;
+
+        if (!hasInput)
+        {
+            inputProcessed = false;
+            return;
+        }
+
+        if (inputProcessed) return;
+
+        inputProcessed = true;
+
+        Vector3 direction = Vector3.zero;
+        if (Mathf.Abs(input.x) > Mathf.Abs(input.y))
+            direction = input.x > 0 ? Vector3.right : Vector3.left;
+        else
+            direction = input.y > 0 ? Vector3.forward : Vector3.back;
+
+        SimulateAndMove(direction);
+    }
+
+    void SimulateAndMove(Vector3 direction)
+    {
+        if (ghostPlayer != null)
+        {
+            ghostPlayer.transform.SetPositionAndRotation(transform.position, transform.rotation);
+
+
+            CalculatePivot(ghostPlayer.transform, direction);
+
+            ghostPlayer.transform.RotateAround(pivot, rotAxis, 90f * rotationDirection);
+        }
+        else
+        {
+            CalculatePivot(transform, direction);
+        }
+
+        StartRealRotation(direction);
+    }
+
+    void StartRealRotation(Vector3 dir)
+    {
+        isMoving = true;
+        currentRotated = 0f;
+        degreesToRotate = 90f;
+
+
+        if (sounds != null && sounds.Length > 0)
+            AudioSource.PlayClipAtPoint(sounds[UnityEngine.Random.Range(0, sounds.Length)], transform.position);
+    }
+
+    bool CalculatePivot(Transform targetTransform, Vector3 dir)
+    {
+        if (boxCollider == null) return false;
+
+        float distToBottom = boxCollider.bounds.extents.y;
+        float distToEdge = 0f;
+
+        if (Mathf.Abs(dir.x) > 0) distToEdge = boxCollider.bounds.extents.x;
+        else distToEdge = boxCollider.bounds.extents.z;
+
+
+        pivot = targetTransform.position + (dir * distToEdge) + (Vector3.down * distToBottom);
+
+
+        rotAxis = Vector3.Cross(Vector3.up, dir);
+        rotationDirection = 1f;
+
+        return true;
+    }
+
+    void PerformRotation()
+    {
+        float step = rotSpeed * Time.deltaTime;
+
+        if (currentRotated + step > degreesToRotate)
+        {
+            step = degreesToRotate - currentRotated;
+            transform.RotateAround(pivot, rotAxis, step * rotationDirection);
+            isMoving = false;
+
+            if (ghostPlayer != null)
             {
-                transform.position = spawnPoint.transform.position;
-                transform.rotation = spawnPoint.transform.rotation;
-
-                bMoving = false;
-                bFalling = false;
+                transform.position = ghostPlayer.transform.position;
+                transform.rotation = ghostPlayer.transform.rotation;
             }
             else
             {
-                Debug.LogError("¡ERROR! No se encontró un SpawnPoint con el Tag 'Respawn' en la escena: " + scene.name);
+                Vector3 euler = transform.eulerAngles;
+                euler.x = Mathf.Round(euler.x / 90) * 90;
+                euler.y = Mathf.Round(euler.y / 90) * 90;
+                euler.z = Mathf.Round(euler.z / 90) * 90;
+                transform.rotation = Quaternion.Euler(euler);
             }
+
+            moveCount++;
+            if (movesText != null) movesText.text = "Moves: " + moveCount;
+        }
+        else
+        {
+            transform.RotateAround(pivot, rotAxis, step * rotationDirection);
+            currentRotated += step;
+        }
+    }
+
+
+    bool isGrounded()
+    {
+        if (boxCollider == null) return false;
+
+        if (isMoving) return true;
+
+        float halfHeight = boxCollider.bounds.extents.y;
+        Vector3 origin = transform.position;
+        float totalDist = halfHeight + 0.2f;
+
+        Debug.DrawRay(origin, Vector3.down * totalDist, Color.cyan);
+
+        return Physics.Raycast(origin, Vector3.down, totalDist, groundLayerMask);
+    }
+
+    void StartFalling()
+    {
+        isFalling = true;
+        if (fallSound != null) AudioSource.PlayClipAtPoint(fallSound, transform.position);
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (isMoving)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawSphere(pivot, 0.1f);
         }
     }
 }
-
-
