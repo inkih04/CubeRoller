@@ -84,13 +84,37 @@ public class MoveCube : MonoBehaviour
 
             isMoving = false;
             isFalling = false;
-            moveCount = 0;
-
-            if (movesText != null) movesText.text = "Moves: 0";
         }
         else
         {
             Debug.LogError("¡ERROR! No se encontró un SpawnPoint con el Tag 'Respawn' en la escena: " + scene.name);
+        }
+
+
+
+        GameObject counterGO = GameObject.FindGameObjectWithTag("MoveCounter");
+
+        if (counterGO != null)
+        {
+            TMP_Text newMovesText = counterGO.GetComponent<TMP_Text>();
+
+            if (newMovesText != null)
+            {
+                movesText = newMovesText;
+
+                movesText.text = "Moves: " + moveCount;
+
+                Debug.Log("Contador re-asignado exitosamente en la escena: " + scene.name);
+            }
+            else
+            {
+                Debug.LogError("El objeto con el tag 'MoveCounter' no tiene un componente TMP_Text.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("No se encontró un objeto con el tag 'MoveCounter' en la escena: " + scene.name);
+            movesText = null; 
         }
     }
 

@@ -6,6 +6,7 @@ TagManager:
   tags:
   - WinTile
   - GhostPlayer
+  - MoveCounter
   layers:
   - Default
   - TransparentFX

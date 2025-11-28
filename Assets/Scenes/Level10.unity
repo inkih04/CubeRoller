@@ -2970,6 +2970,7 @@ RectTransform:
   m_Children:
   - {fileID: 2001567582}
   - {fileID: 990044448}
+  - {fileID: 1659761473}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -4855,12 +4856,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1659761469}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.31730464, y: 0, z: 0, w: 0.94832367}
-  m_LocalPosition: {x: 13, y: -35.9, z: 70}
-  m_LocalScale: {x: 80, y: 80, z: 1}
+  m_LocalRotation: {x: -0.0000885725, y: -0.015401193, z: 0.0058558946, w: 0.99986434}
+  m_LocalPosition: {x: -5.06077, y: 58.02694, z: -68.68996}
+  m_LocalScale: {x: 412.9209, y: 412.9209, z: 5.161511}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1030134760}
   m_LocalEulerAnglesHint: {x: 37, y: 0, z: 0}
 --- !u!4 &1677361952 stripped
 Transform:
@@ -5732,7 +5733,7 @@ GameObject:
   - component: {fileID: 2001567583}
   m_Layer: 5
   m_Name: Contador
-  m_TagString: Untagged
+  m_TagString: MoveCounter
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -6559,7 +6560,6 @@ SceneRoots:
   - {fileID: 832575519}
   - {fileID: 5272388738582090395}
   - {fileID: 925327431}
-  - {fileID: 1659761473}
   - {fileID: 1030134760}
   - {fileID: 1098254961}
   - {fileID: 1111790908}
