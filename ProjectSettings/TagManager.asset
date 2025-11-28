@@ -7,6 +7,8 @@ TagManager:
   - WinTile
   - GhostPlayer
   - MoveCounter
+  - GhostTileV
+  - GhostTileH
   layers:
   - Default
   - TransparentFX
