@@ -3446,8 +3446,9 @@ MonoBehaviour:
   fallSpeed: 2
   ghostPlayer: {fileID: 1321530892}
   sounds:
-  - {fileID: 8300000, guid: 6588f78fcb7456f4ab7840b863429068, type: 3}
-  fallSound: {fileID: 8300000, guid: 6ac4dc07db529eb4fb121643c48573ea, type: 3}
+  - {fileID: 8300000, guid: ea4de65d055d11f45a6a6d62a934c6ee, type: 3}
+  - {fileID: 8300000, guid: 9b04fb675444ad94cbdbf035f4b6e36b, type: 3}
+  fallSound: {fileID: 8300000, guid: c0c7595d5cbe6634096ff199a183f891, type: 3}
   movesText: {fileID: 2001567583}
 --- !u!54 &1402451734
 Rigidbody:
@@ -4070,8 +4071,8 @@ Transform:
   m_GameObject: {fileID: 1659761469}
   serializedVersion: 2
   m_LocalRotation: {x: -0.0000885725, y: -0.015401193, z: 0.0058558946, w: 0.99986434}
-  m_LocalPosition: {x: -5.06077, y: 58.02694, z: -68.68996}
-  m_LocalScale: {x: 412.9209, y: 412.9209, z: 5.161511}
+  m_LocalPosition: {x: 12.7, y: 58.2, z: -68.1}
+  m_LocalScale: {x: 1651.6836, y: 825.8418, z: 5.161511}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1030134760}
