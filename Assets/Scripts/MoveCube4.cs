@@ -13,7 +13,16 @@ public class MoveCube : MonoBehaviour
 
     [Header("Configuración Bloxorz")]
     public float rotSpeed = 300f;
-    public float fallSpeed = 20f;
+    public float fallSpeed = 10f;
+    public float fallRotationSpeed = 180f;
+    public float maxFallRotation = 70f;
+    public float fallRespawnTime = 5f;
+
+    [Header("Debug")]
+    public bool showOrientationDebug = true;
+    private float debugUpdateInterval = 0.5f;
+    private float debugTimer = 0f;
+    private string lastOrientationDebug = "";
 
     [Header("Referencias")]
     public GameObject ghostPlayer;
@@ -21,61 +30,110 @@ public class MoveCube : MonoBehaviour
     public AudioClip fallSound;
     public TMP_Text movesText;
 
-    // Variables de estado
     private bool isMoving = false;
     private bool isFalling = false;
-    private bool isVictory = false; // <--- NUEVA VARIABLE IMPORTANTE
+    private bool isVictory = false; // Para evitar muerte durante victoria
+    private bool controlsActive = true; // Para desactivar controles durante animaciones
+    private float fallRotationAmount = 0f;
+    private float fallTimer = 0f;
     private int moveCount = 0;
 
-    // Variables de cálculo
     private Vector3 pivot;
     private Vector3 rotAxis;
     private float degreesToRotate = 90f;
     private float currentRotated = 0f;
     private float rotationDirection = 0f;
-    private float targetX, targetZ;
-    private bool inputProcessed = true;
-    private bool controlsActive = true;
+    private float targetX, targetZ; // Para spawn desde el cielo
+
+    private Vector3 fallPivot;
+    private Vector3 fallRotationAxis;
+    private float fallRotationDirection = 1f;
 
     InputAction moveAction;
     LayerMask groundLayerMask;
     BoxCollider boxCollider;
     Rigidbody rb;
 
+    private Vector2 lastInput = Vector2.zero;
+    private bool inputProcessed = true;
+
     private void Awake()
     {
-        if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); SceneManager.sceneLoaded += OnSceneLoaded; }
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
         else { Destroy(gameObject); return; }
 
         boxCollider = GetComponent<BoxCollider>();
         rb = GetComponent<Rigidbody>();
+
         rb.isKinematic = true;
         rb.useGravity = false;
         rb.constraints = RigidbodyConstraints.FreezeAll;
+
+        if (ghostPlayer == null)
+        {
+            GameObject go = GameObject.FindWithTag("GhostPlayer");
+            if (go != null) ghostPlayer = go;
+        }
     }
 
-    private void OnDestroy() { if (Instance == this) SceneManager.sceneLoaded -= OnSceneLoaded; }
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+    }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (scene.name == "MainMenu") return;
 
-        transform.position = Vector3.up * 50f; // Zona segura al cargar
-        this.enabled = true;
-
         // Resetear estados
-        isVictory = false; // <--- RESETEAR AQUÍ
+        isVictory = false;
         isMoving = false;
         isFalling = false;
+        fallRotationAmount = 0f;
+        fallTimer = 0f;
+        controlsActive = true;
 
+        // Posición segura temporal
+        transform.position = Vector3.up * 50f;
+        this.enabled = true;
+
+        // Ocultar jugador inicialmente
         HidePlayer();
 
+        // Re-asignar contador de movimientos
         GameObject counterGO = GameObject.FindGameObjectWithTag("MoveCounter");
-        if (counterGO != null && counterGO.TryGetComponent(out TMP_Text txt)) { movesText = txt; movesText.text = "Moves: " + moveCount; }
+        if (counterGO != null)
+        {
+            TMP_Text newMovesText = counterGO.GetComponent<TMP_Text>();
+            if (newMovesText != null)
+            {
+                movesText = newMovesText;
+                movesText.text = "Moves: " + moveCount;
+                Debug.Log("Contador re-asignado exitosamente en la escena: " + scene.name);
+            }
+            else
+            {
+                Debug.LogError("El objeto con el tag 'MoveCounter' no tiene un componente TMP_Text.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("No se encontró un objeto con el tag 'MoveCounter' en la escena: " + scene.name);
+            movesText = null;
+        }
     }
 
     void Start()
     {
+        // Ocultar ghost player inicialmente
         if (ghostPlayer != null)
         {
             Renderer[] renderers = ghostPlayer.GetComponentsInChildren<Renderer>(true);
@@ -83,17 +141,39 @@ public class MoveCube : MonoBehaviour
         }
 
         var playerInput = GetComponent<PlayerInput>();
-        if (playerInput != null) moveAction = playerInput.actions["Move"];
+        if (playerInput != null)
+        {
+            moveAction = playerInput.actions["Move"];
+        }
         else
         {
             moveAction = new InputAction("Move", binding: "<Gamepad>/leftStick");
-            moveAction.AddCompositeBinding("2DVector").With("Up", "<Keyboard>/w").With("Down", "<Keyboard>/s").With("Left", "<Keyboard>/a").With("Right", "<Keyboard>/d").With("Up", "<Keyboard>/upArrow").With("Down", "<Keyboard>/downArrow").With("Left", "<Keyboard>/leftArrow").With("Right", "<Keyboard>/rightArrow");
+            moveAction.AddCompositeBinding("2DVector")
+                .With("Up", "<Keyboard>/w")
+                .With("Down", "<Keyboard>/s")
+                .With("Left", "<Keyboard>/a")
+                .With("Right", "<Keyboard>/d")
+                .With("Up", "<Keyboard>/upArrow")
+                .With("Down", "<Keyboard>/downArrow")
+                .With("Left", "<Keyboard>/leftArrow")
+                .With("Right", "<Keyboard>/rightArrow");
             moveAction.Enable();
         }
 
-        groundLayerMask = LayerMask.GetMask("Ground", "Default");
+        int groundLayerIndex = LayerMask.NameToLayer("Ground");
+        if (groundLayerIndex == -1)
+        {
+            groundLayerMask = LayerMask.GetMask("Default");
+        }
+        else
+        {
+            groundLayerMask = LayerMask.GetMask("Ground");
+        }
+
         rb.isKinematic = true;
     }
+
+    // ==================== MÉTODOS DE ANIMACIÓN ====================
 
     public void HidePlayer()
     {
@@ -124,68 +204,12 @@ public class MoveCube : MonoBehaviour
         }
     }
 
-    // --- LÓGICA DE DETECCIÓN DE ESTADO ---
-
-    // Método para saber si el cubo está QUIETO (importante para el WinTile)
-    public bool IsStopped()
-    {
-        return !isMoving && !isFalling && rb.linearVelocity.sqrMagnitude < 0.01f;
-    }
-
-    public bool IsVertical()
-    {
-        float tolerance = 0.1f;
-        // Compara la altura Y con X y Z. Si es mayor que ambos, está de pie.
-        return boxCollider.bounds.size.y > (boxCollider.bounds.size.x + tolerance) &&
-               boxCollider.bounds.size.y > (boxCollider.bounds.size.z + tolerance);
-    }
-
-    public void FallIntoHole(string nextLevel)
-    {
-        if (isFalling || isVictory) return;
-        StartCoroutine(FallWinSequence(nextLevel));
-    }
-
-    IEnumerator FallWinSequence(string nextLevel)
-    {
-        isVictory = true; // <--- MARCAMOS VICTORIA PARA EVITAR MUERTE
-        isFalling = true;
-        SetPlayerControl(false);
-
-        if (fallSound != null) AudioSource.PlayClipAtPoint(fallSound, transform.position);
-
-        // Desactivar collider para atravesar el suelo
-        boxCollider.enabled = false;
-
-        float dropDistance = 5f;
-        Vector3 startPos = transform.position;
-        Vector3 targetPos = startPos + Vector3.down * dropDistance;
-        float t = 0;
-
-        // Caída suave
-        while (t < 1f)
-        {
-            t += Time.deltaTime * 2f;
-            transform.position = Vector3.Lerp(startPos, targetPos, t);
-            yield return null;
-        }
-
-        // Llamar al Manager
-        LevelSequenceManager manager = FindObjectOfType<LevelSequenceManager>();
-        if (manager != null) manager.LoadNextLevel(nextLevel);
-        else SceneManager.LoadScene(nextLevel);
-
-        // Restaurar collider (importante para el siguiente nivel)
-        boxCollider.enabled = true;
-    }
-
-    // ... WaitForLanding, SetPlayerControl, etc. ...
-
     IEnumerator WaitForLanding()
     {
         yield return new WaitForSeconds(0.1f);
         float distToGround = boxCollider.bounds.extents.y + 0.1f;
-        while (!Physics.Raycast(transform.position, Vector3.down, distToGround, groundLayerMask)) yield return null;
+        while (!Physics.Raycast(transform.position, Vector3.down, distToGround, groundLayerMask))
+            yield return null;
 
         RaycastHit hit;
         if (Physics.Raycast(transform.position, Vector3.down, out hit, 2f, groundLayerMask))
@@ -208,11 +232,72 @@ public class MoveCube : MonoBehaviour
         isMoving = false;
     }
 
-    public void SetPlayerControl(bool active) { controlsActive = active; if (!active) isMoving = false; }
+    public void SetPlayerControl(bool active)
+    {
+        controlsActive = active;
+        if (!active) isMoving = false;
+    }
+
+    // ==================== MÉTODOS PARA WINTILE ====================
+
+    public bool IsStopped()
+    {
+        return !isMoving && !isFalling && rb.linearVelocity.sqrMagnitude < 0.01f;
+    }
+
+    public bool IsVertical()
+    {
+        float tolerance = 0.1f;
+        return boxCollider.bounds.size.y > (boxCollider.bounds.size.x + tolerance) &&
+               boxCollider.bounds.size.y > (boxCollider.bounds.size.z + tolerance);
+    }
+
+    public void FallIntoHole(string nextLevel)
+    {
+        StartCoroutine(FallWinSequence(nextLevel));
+    }
+
+    IEnumerator FallWinSequence(string nextLevel)
+    {
+        isVictory = true;
+        isFalling = true;
+        SetPlayerControl(false);
+
+        if (fallSound != null)
+            AudioSource.PlayClipAtPoint(fallSound, transform.position);
+
+        // Desactivar collider para atravesar el suelo
+        boxCollider.enabled = false;
+
+        float dropDistance = 5f;
+        Vector3 startPos = transform.position;
+        Vector3 targetPos = startPos + Vector3.down * dropDistance;
+        float t = 0;
+
+        // Caída suave
+        while (t < 1f)
+        {
+            t += Time.deltaTime * 2f;
+            transform.position = Vector3.Lerp(startPos, targetPos, t);
+            yield return null;
+        }
+
+        // Llamar al Manager
+        LevelSequenceManager manager = FindObjectOfType<LevelSequenceManager>();
+        if (manager != null)
+            manager.LoadNextLevel(nextLevel);
+        else
+            SceneManager.LoadScene(nextLevel);
+
+        // Restaurar collider
+        boxCollider.enabled = true;
+    }
+
+    // ==================== UPDATE ====================
 
     void Update()
     {
-        // --- CORRECCIÓN CRÍTICA: NO MORIR SI ES VICTORIA ---
+        // CORRECCIÓN CRÍTICA: NO MORIR SI ES VICTORIA
         if (!isVictory && transform.position.y < -5f)
         {
             LevelSequenceManager manager = FindObjectOfType<LevelSequenceManager>();
@@ -225,78 +310,186 @@ public class MoveCube : MonoBehaviour
             }
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
-        // --------------------------------------------------
 
-        if (!rb.isKinematic && !isFalling) return;
-
-        // Si estamos cayendo por victoria (y collider apagado) no usamos Translate manual, la corrutina lo hace.
-        // Si estamos cayendo por muerte (isFalling y NO isVictory), usamos esto:
-        if (isFalling && !isVictory)
+        // Debug de orientación
+        if (showOrientationDebug && !isMoving && boxCollider != null)
         {
+            debugTimer += Time.deltaTime;
+            if (debugTimer >= debugUpdateInterval)
+            {
+                debugTimer = 0f;
+
+                bool isHorizontal = IsInHorizontalPosition();
+                bool isVertical = !isHorizontal;
+
+                Vector3 worldSize = boxCollider.bounds.size;
+                float worldHeight = worldSize.y;
+                float worldMaxHorizontal = Mathf.Max(worldSize.x, worldSize.z);
+
+                string orientationText = isVertical ? "VERTICAL ✓" : "HORIZONTAL ↔";
+                string debugMsg = $"[PLAYER] Orientación: {orientationText} | " +
+                                $"Bounds.size: (X:{worldSize.x:F2}, Y:{worldSize.y:F2}, Z:{worldSize.z:F2}) | " +
+                                $"Altura: {worldHeight:F2} vs Ancho: {worldMaxHorizontal:F2} | " +
+                                $"Rotación: {transform.eulerAngles}";
+
+                if (debugMsg != lastOrientationDebug)
+                {
+                    Debug.Log(debugMsg);
+                    lastOrientationDebug = debugMsg;
+                }
+            }
+        }
+
+        // Si estamos cayendo durante victoria (collider desactivado), la corrutina maneja todo
+        if (isVictory) return;
+
+        // Lógica de caída por muerte
+        if (isFalling)
+        {
+            fallTimer += Time.deltaTime;
+
+            if (fallTimer >= fallRespawnTime)
+            {
+                RespawnPlayer();
+                return;
+            }
+
             transform.Translate(Vector3.down * fallSpeed * Time.deltaTime, Space.World);
+
+            if (fallRotationAmount < maxFallRotation)
+            {
+                float rotStep = fallRotationSpeed * Time.deltaTime;
+                if (fallRotationAmount + rotStep > maxFallRotation)
+                {
+                    rotStep = maxFallRotation - fallRotationAmount;
+                }
+                transform.RotateAround(fallPivot, fallRotationAxis, rotStep * fallRotationDirection);
+                fallRotationAmount += rotStep;
+            }
             return;
         }
 
-        if (isMoving) { PerformRotation(); return; }
-        if (controlsActive) HandleInput();
+        if (isMoving)
+        {
+            PerformRotation();
+            return;
+        }
+
+        if (controlsActive)
+        {
+            HandleInput();
+        }
     }
 
-    // ... HandleInput, SimulateAndMove, etc. (El resto es igual) ...
     void HandleInput()
     {
-        if (!isGrounded()) { StartFalling(); return; }
+        if (isMoving)
+        {
+            inputProcessed = false;
+            return;
+        }
+
+        if (!IsGroundedAdvanced())
+        {
+            StartFalling();
+            return;
+        }
+
         if (moveAction == null) return;
+
         Vector2 input = moveAction.ReadValue<Vector2>();
-        bool hasInput = input.magnitude > 0.5f;
-        if (!hasInput) { inputProcessed = false; return; }
+
+        bool hasInput = Mathf.Abs(input.x) > 0.5f || Mathf.Abs(input.y) > 0.5f;
+
+        if (!hasInput)
+        {
+            inputProcessed = false;
+            return;
+        }
+
         if (inputProcessed) return;
+
         inputProcessed = true;
+
         Vector3 direction = Vector3.zero;
-        if (Mathf.Abs(input.x) > Mathf.Abs(input.y)) direction = input.x > 0 ? Vector3.right : Vector3.left;
-        else direction = input.y > 0 ? Vector3.forward : Vector3.back;
+        if (Mathf.Abs(input.x) > Mathf.Abs(input.y))
+            direction = input.x > 0 ? Vector3.right : Vector3.left;
+        else
+            direction = input.y > 0 ? Vector3.forward : Vector3.back;
+
         SimulateAndMove(direction);
     }
+
     void SimulateAndMove(Vector3 direction)
     {
         if (ghostPlayer != null)
         {
             ghostPlayer.transform.SetPositionAndRotation(transform.position, transform.rotation);
+
             CalculatePivot(ghostPlayer.transform, direction);
+
             ghostPlayer.transform.RotateAround(pivot, rotAxis, 90f * rotationDirection);
         }
-        else CalculatePivot(transform, direction);
+        else
+        {
+            CalculatePivot(transform, direction);
+        }
+
         StartRealRotation(direction);
     }
+
     void StartRealRotation(Vector3 dir)
     {
-        isMoving = true; currentRotated = 0f; degreesToRotate = 90f;
-        if (sounds != null && sounds.Length > 0) AudioSource.PlayClipAtPoint(sounds[UnityEngine.Random.Range(0, sounds.Length)], transform.position);
+        isMoving = true;
+        currentRotated = 0f;
+        degreesToRotate = 90f;
+
+        if (sounds != null && sounds.Length > 0)
+            AudioSource.PlayClipAtPoint(sounds[UnityEngine.Random.Range(0, sounds.Length)], transform.position);
     }
+
     bool CalculatePivot(Transform targetTransform, Vector3 dir)
     {
         if (boxCollider == null) return false;
+
         float distToBottom = boxCollider.bounds.extents.y;
-        float distToEdge = (Mathf.Abs(dir.x) > 0) ? boxCollider.bounds.extents.x : boxCollider.bounds.extents.z;
+        float distToEdge = 0f;
+
+        if (Mathf.Abs(dir.x) > 0) distToEdge = boxCollider.bounds.extents.x;
+        else distToEdge = boxCollider.bounds.extents.z;
+
         pivot = targetTransform.position + (dir * distToEdge) + (Vector3.down * distToBottom);
+
         rotAxis = Vector3.Cross(Vector3.up, dir);
         rotationDirection = 1f;
+
         return true;
     }
+
     void PerformRotation()
     {
         float step = rotSpeed * Time.deltaTime;
+
         if (currentRotated + step > degreesToRotate)
         {
             step = degreesToRotate - currentRotated;
             transform.RotateAround(pivot, rotAxis, step * rotationDirection);
             isMoving = false;
-            if (ghostPlayer != null) { transform.position = ghostPlayer.transform.position; transform.rotation = ghostPlayer.transform.rotation; }
+
+            if (ghostPlayer != null)
+            {
+                transform.position = ghostPlayer.transform.position;
+                transform.rotation = ghostPlayer.transform.rotation;
+            }
             else
             {
                 Vector3 euler = transform.eulerAngles;
-                euler.x = Mathf.Round(euler.x / 90) * 90; euler.y = Mathf.Round(euler.y / 90) * 90; euler.z = Mathf.Round(euler.z / 90) * 90;
+                euler.x = Mathf.Round(euler.x / 90) * 90;
+                euler.y = Mathf.Round(euler.y / 90) * 90;
+                euler.z = Mathf.Round(euler.z / 90) * 90;
                 transform.rotation = Quaternion.Euler(euler);
             }
+
             moveCount++;
             if (movesText != null) movesText.text = "Moves: " + moveCount;
         }
@@ -306,16 +499,187 @@ public class MoveCube : MonoBehaviour
             currentRotated += step;
         }
     }
-    bool isGrounded()
+
+    bool IsGroundedAdvanced()
     {
-        if (!rb.isKinematic) return true;
+        if (boxCollider == null) return false;
         if (isMoving) return true;
-        float dist = boxCollider.bounds.extents.y + 0.1f;
-        return Physics.Raycast(transform.position, Vector3.down, dist, groundLayerMask, QueryTriggerInteraction.Collide);
+
+        bool isHorizontal = IsInHorizontalPosition();
+
+        if (isHorizontal)
+        {
+            return CheckBothHalvesGrounded();
+        }
+        else
+        {
+            return CheckCenterGrounded();
+        }
     }
+
+    bool IsInHorizontalPosition()
+    {
+        if (boxCollider == null) return false;
+
+        Vector3 worldSize = boxCollider.bounds.size;
+
+        float worldHeight = worldSize.y;
+        float worldMaxHorizontal = Mathf.Max(worldSize.x, worldSize.z);
+
+        bool isHorizontal = worldHeight < worldMaxHorizontal;
+
+        return isHorizontal;
+    }
+
+    public bool IsInVerticalPosition()
+    {
+        return !IsInHorizontalPosition();
+    }
+
+    public bool IsFalling()
+    {
+        return isFalling;
+    }
+
+    public bool IsMoving()
+    {
+        return isMoving;
+    }
+
+    bool CheckCenterGrounded()
+    {
+        float halfHeight = boxCollider.bounds.extents.y;
+        Vector3 origin = transform.position;
+        float totalDist = halfHeight + 0.15f;
+
+        Debug.DrawRay(origin, Vector3.down * totalDist, Color.cyan, 0.1f);
+
+        RaycastHit hit;
+        if (Physics.Raycast(origin, Vector3.down, out hit, totalDist, groundLayerMask))
+        {
+            if (hit.collider != null && hit.collider.CompareTag("WinTile") && hit.collider.gameObject.layer == LayerMask.NameToLayer("Ground"))
+            {
+                Debug.Log("[MoveCube] Detectada WinTile debajo en layer Ground (posición VERTICAL) -> se permite caer.");
+                return false;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    bool CheckBothHalvesGrounded()
+    {
+        Vector3 longAxisDirection = GetLongAxisDirection();
+
+        float offsetDistance = 0.5f;
+
+        Vector3 center1 = transform.position + longAxisDirection * offsetDistance;
+        Vector3 center2 = transform.position - longAxisDirection * offsetDistance;
+
+        float halfHeight = boxCollider.bounds.extents.y;
+        float rayDistance = halfHeight + 0.15f;
+
+        RaycastHit hit1, hit2;
+        bool half1Grounded = Physics.Raycast(center1, Vector3.down, out hit1, rayDistance, groundLayerMask);
+        bool half2Grounded = Physics.Raycast(center2, Vector3.down, out hit2, rayDistance, groundLayerMask);
+
+        bool half1IsWinTile = half1Grounded && hit1.collider != null && hit1.collider.CompareTag("WinTile");
+        bool half2IsWinTile = half2Grounded && hit2.collider != null && hit2.collider.CompareTag("WinTile");
+
+        if (half1IsWinTile) half1Grounded = true;
+        if (half2IsWinTile) half2Grounded = true;
+
+        Debug.DrawRay(center1, Vector3.down * rayDistance, half1Grounded ? Color.green : Color.red, 0.1f);
+        Debug.DrawRay(center2, Vector3.down * rayDistance, half2Grounded ? Color.green : Color.red, 0.1f);
+
+        bool isGrounded = half1Grounded && half2Grounded;
+
+        if (!isGrounded && (half1Grounded || half2Grounded))
+        {
+            Vector3 airborneCenter = half2Grounded ? center1 : center2;
+            Vector3 groundedCenter = half1Grounded ? center1 : center2;
+
+            CalculateFallPivot(airborneCenter, groundedCenter, longAxisDirection);
+        }
+
+        return isGrounded;
+    }
+
+    Vector3 GetLongAxisDirection()
+    {
+        Vector3 localLongAxis = new Vector3(0, 0, 1);
+
+        Vector3 worldLongAxis = transform.TransformDirection(localLongAxis);
+
+        worldLongAxis.y = 0;
+        worldLongAxis.Normalize();
+
+        return worldLongAxis;
+    }
+
+    void CalculateFallPivot(Vector3 airborneCenter, Vector3 groundedCenter, Vector3 longAxis)
+    {
+        float halfHeight = boxCollider.bounds.extents.y;
+
+        fallPivot = airborneCenter + Vector3.down * halfHeight;
+
+        fallRotationAxis = Vector3.Cross(Vector3.up, longAxis).normalized;
+
+        Vector3 directionToAirborne = (airborneCenter - groundedCenter).normalized;
+
+        Vector3 testRotation = Vector3.Cross(fallRotationAxis, Vector3.down);
+        float dotProduct = Vector3.Dot(testRotation, directionToAirborne);
+
+        fallRotationDirection = dotProduct > 0 ? -1f : 1f;
+
+        Debug.Log($"Fall Pivot calculado: {fallPivot}, Eje: {fallRotationAxis}, Dirección: {fallRotationDirection}");
+    }
+
     void StartFalling()
     {
         isFalling = true;
-        if (fallSound != null) AudioSource.PlayClipAtPoint(fallSound, transform.position);
+        fallRotationAmount = 0f;
+        fallTimer = 0f;
+        if (fallSound != null)
+            AudioSource.PlayClipAtPoint(fallSound, transform.position);
+    }
+
+    void RespawnPlayer()
+    {
+        GameObject spawnPoint = GameObject.FindGameObjectWithTag("Respawn");
+
+        if (spawnPoint != null)
+        {
+            transform.position = spawnPoint.transform.position;
+            transform.rotation = spawnPoint.transform.rotation;
+
+            isFalling = false;
+            fallRotationAmount = 0f;
+            fallTimer = 0f;
+
+            Debug.Log("Jugador respawneado tras caída");
+        }
+        else
+        {
+            Debug.LogError("No se encontró el punto de spawn para respawnear");
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (isMoving && pivot != Vector3.zero)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawSphere(pivot, 0.1f);
+        }
+
+        if (isFalling && fallPivot != Vector3.zero)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawSphere(fallPivot, 0.15f);
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawRay(fallPivot, fallRotationAxis * 0.5f);
+        }
     }
 }

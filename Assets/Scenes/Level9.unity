@@ -955,6 +955,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MoveCube
   rotSpeed: 150
   fallSpeed: 2
+  fallRotationSpeed: 180
+  maxFallRotation: 70
+  fallRespawnTime: 5
+  showOrientationDebug: 1
   ghostPlayer: {fileID: 1321530892}
   sounds:
   - {fileID: 8300000, guid: ea4de65d055d11f45a6a6d62a934c6ee, type: 3}
@@ -3594,7 +3598,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1755417507962730814, guid: f1a015ed9d57f724c8db43a4132c0f6e, type: 3}
       propertyPath: m_Layer
-      value: 0
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 1755417507962730814, guid: f1a015ed9d57f724c8db43a4132c0f6e, type: 3}
       propertyPath: m_TagString

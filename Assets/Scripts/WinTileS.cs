@@ -6,8 +6,8 @@ using UnityEngine.SceneManagement;
 public class WinTileS : MonoBehaviour
 {
     public string nextLevelName = "Level2";
+    public float delayBeforeLoad = 0.2f;
     public TMP_Text levelText;
-
     private bool hasTriggered = false;
 
     void Start()
@@ -19,31 +19,34 @@ public class WinTileS : MonoBehaviour
         }
     }
 
-    // Usamos OnTriggerStay para comprobar continuamente mientras el cubo está encima
-    void OnTriggerStay(Collider other)
+    void OnTriggerEnter(Collider other)
     {
-        if (hasTriggered) return;
-
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && !hasTriggered)
         {
-            MoveCube player = other.GetComponent<MoveCube>();
-
-            // --- DOBLE COMPROBACIÓN DE SEGURIDAD ---
-            if (player != null)
+            Debug.Log($"[WinTile] Player entró en el trigger.");
+            if (MoveCube.Instance == null)
             {
-                // 1. ¿El jugador ha terminado de moverse? (Evita fallos al pasar rodando)
-                bool isStopped = player.IsStopped();
+                Debug.LogError("[WinTile] MoveCube.Instance es NULL!");
+                return;
+            }
+            hasTriggered = true;
 
-                // 2. ¿Está vertical?
-                bool isVertical = player.IsVertical();
-
-                if (isStopped && isVertical)
-                {
-                    hasTriggered = true;
-                    Debug.Log("¡Victoria confirmada! Vertical y Quieto.");
-                    player.FallIntoHole(nextLevelName);
-                }
+            bool isVertical = MoveCube.Instance.IsInVerticalPosition();
+            Debug.Log($"[WinTile] IsInVerticalPosition() tras esperar: {isVertical}");
+            if (isVertical)
+            {
+                Debug.Log($"<color=green>¡VICTORIA! El jugador está en posición VERTICAL ✓</color>");
+                Debug.Log($"<color=cyan>Cargando nivel: {nextLevelName}</color>");
+                MoveCube.Instance.FallIntoHole(nextLevelName);
+            }
+            else
+            {
+                Debug.LogWarning($"<color=yellow>El jugador NO está en vertical después de la espera.</color>");
+                hasTriggered = false;
             }
         }
     }
+
+
+
 }
