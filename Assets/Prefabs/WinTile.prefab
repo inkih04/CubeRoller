@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5003318762340934573}
   - component: {fileID: 3834043490049538544}
   - component: {fileID: 505870462489666864}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: WinTile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -67,3 +67,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WinTileS
   nextLevelName: level2
+  delayBeforeLoad: 1
+  levelText: {fileID: 0}

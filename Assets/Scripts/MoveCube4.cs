@@ -17,6 +17,12 @@ public class MoveCube : MonoBehaviour
     public float maxFallRotation = 70f; // Máxima rotación antes de solo caer
     public float fallRespawnTime = 5f; // Tiempo antes de respawnear tras caer
 
+    [Header("Debug")]
+    public bool showOrientationDebug = true;
+    private float debugUpdateInterval = 0.5f; // Actualizar debug cada 0.5 segundos
+    private float debugTimer = 0f;
+    private string lastOrientationDebug = "";
+
     [Header("Referencias")]
     public GameObject ghostPlayer;
     public AudioClip[] sounds;
@@ -163,6 +169,41 @@ public class MoveCube : MonoBehaviour
 
     void Update()
     {
+        if (showOrientationDebug && !isMoving)
+        {
+            debugTimer += Time.deltaTime;
+            if (debugTimer >= debugUpdateInterval)
+            {
+                debugTimer = 0f;
+
+                bool isHorizontal = IsInHorizontalPosition();
+                bool isVertical = !isHorizontal;
+
+                // Información detallada
+                Vector3 localSize = boxCollider.size;
+                Vector3 worldX = transform.TransformVector(new Vector3(localSize.x, 0, 0));
+                Vector3 worldY = transform.TransformVector(new Vector3(0, localSize.y, 0));
+                Vector3 worldZ = transform.TransformVector(new Vector3(0, 0, localSize.z));
+
+                float sizeX = worldX.magnitude;
+                float sizeY = worldY.magnitude;
+                float sizeZ = worldZ.magnitude;
+
+                string orientationText = isVertical ? "VERTICAL ?" : "HORIZONTAL ?";
+                string debugMsg = $"[PLAYER] Orientación: {orientationText} | " +
+                                $"Dimensiones (X:{sizeX:F2}, Y:{sizeY:F2}, Z:{sizeZ:F2}) | " +
+                                $"Rotación: {transform.eulerAngles}";
+
+                // Solo mostrar si cambió para no saturar la consola
+                if (debugMsg != lastOrientationDebug)
+                {
+                    Debug.Log(debugMsg);
+                    lastOrientationDebug = debugMsg;
+                }
+            }
+        }
+
+
         if (isFalling)
         {
             // Incrementar el temporizador de caída
@@ -343,26 +384,24 @@ public class MoveCube : MonoBehaviour
     // Determina si el cubo está en posición horizontal usando los contact points
     bool IsInHorizontalPosition()
     {
-        // Usamos los bounds locales del collider para determinar la orientación
-        Vector3 localSize = boxCollider.size;
+        if (boxCollider == null) return false;
 
-        // Calculamos las dimensiones en el espacio mundial considerando la rotación
-        Vector3 worldX = transform.TransformVector(new Vector3(localSize.x, 0, 0));
-        Vector3 worldY = transform.TransformVector(new Vector3(0, localSize.y, 0));
-        Vector3 worldZ = transform.TransformVector(new Vector3(0, 0, localSize.z));
+        // Usar bounds.size directamente - YA está en espacio mundial correcto
+        Vector3 worldSize = boxCollider.bounds.size;
 
-        float sizeX = worldX.magnitude;
-        float sizeY = worldY.magnitude;
-        float sizeZ = worldZ.magnitude;
+        float worldHeight = worldSize.y;  // Altura real en el mundo
+        float worldMaxHorizontal = Mathf.Max(worldSize.x, worldSize.z);  // Máxima dimensión horizontal
 
-        // Está horizontal si la altura (Y) es menor que el máximo horizontal
-        // Con escala (1,1,2), en horizontal Y?1, y X o Z?2
-        // En vertical Y?2, y X y Z?1
-        float height = sizeY;
-        float maxHorizontal = Mathf.Max(sizeX, sizeZ);
+        // VERTICAL: altura > ancho (ej: 2.0 > 1.0) 
+        // HORIZONTAL: altura < ancho (ej: 1.0 < 2.0)
+        bool isHorizontal = worldHeight < worldMaxHorizontal;
 
-        // Está horizontal cuando la altura es la dimensión pequeña
-        return height < maxHorizontal * 0.8f;
+        return isHorizontal;
+    }
+
+    public bool IsInVerticalPosition()
+    {
+        return !IsInHorizontalPosition();
     }
 
     // Verifica si el centro está tocando el suelo (para posición vertical)
