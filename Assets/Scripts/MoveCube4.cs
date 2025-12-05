@@ -169,7 +169,8 @@ public class MoveCube : MonoBehaviour
 
     void Update()
     {
-        if (showOrientationDebug && !isMoving)
+        // ===== DEBUG DE ORIENTACIÓN CORREGIDO =====
+        if (showOrientationDebug && !isMoving && boxCollider != null)
         {
             debugTimer += Time.deltaTime;
             if (debugTimer >= debugUpdateInterval)
@@ -179,22 +180,17 @@ public class MoveCube : MonoBehaviour
                 bool isHorizontal = IsInHorizontalPosition();
                 bool isVertical = !isHorizontal;
 
-                // Información detallada
-                Vector3 localSize = boxCollider.size;
-                Vector3 worldX = transform.TransformVector(new Vector3(localSize.x, 0, 0));
-                Vector3 worldY = transform.TransformVector(new Vector3(0, localSize.y, 0));
-                Vector3 worldZ = transform.TransformVector(new Vector3(0, 0, localSize.z));
-
-                float sizeX = worldX.magnitude;
-                float sizeY = worldY.magnitude;
-                float sizeZ = worldZ.magnitude;
+                // ? CORRECTO: Usar Bounds.size (ya está en espacio mundial)
+                Vector3 worldSize = boxCollider.bounds.size;
+                float worldHeight = worldSize.y;
+                float worldMaxHorizontal = Mathf.Max(worldSize.x, worldSize.z);
 
                 string orientationText = isVertical ? "VERTICAL ?" : "HORIZONTAL ?";
                 string debugMsg = $"[PLAYER] Orientación: {orientationText} | " +
-                                $"Dimensiones (X:{sizeX:F2}, Y:{sizeY:F2}, Z:{sizeZ:F2}) | " +
+                                $"Bounds.size: (X:{worldSize.x:F2}, Y:{worldSize.y:F2}, Z:{worldSize.z:F2}) | " +
+                                $"Altura: {worldHeight:F2} vs Ancho: {worldMaxHorizontal:F2} | " +
                                 $"Rotación: {transform.eulerAngles}";
 
-                // Solo mostrar si cambió para no saturar la consola
                 if (debugMsg != lastOrientationDebug)
                 {
                     Debug.Log(debugMsg);
@@ -202,21 +198,18 @@ public class MoveCube : MonoBehaviour
                 }
             }
         }
-
+        // ===== FIN DEBUG =====
 
         if (isFalling)
         {
-            // Incrementar el temporizador de caída
             fallTimer += Time.deltaTime;
 
-            // Si ha pasado el tiempo de respawn, teleportar al spawn
             if (fallTimer >= fallRespawnTime)
             {
                 RespawnPlayer();
                 return;
             }
 
-            // Animación de caída con rotación limitada
             transform.Translate(Vector3.down * fallSpeed * Time.deltaTime, Space.World);
 
             if (fallRotationAmount < maxFallRotation)
@@ -381,7 +374,7 @@ public class MoveCube : MonoBehaviour
         }
     }
 
-    // Determina si el cubo está en posición horizontal usando los contact points
+    // Determina si el cubo está en posición horizontal
     bool IsInHorizontalPosition()
     {
         if (boxCollider == null) return false;
@@ -399,9 +392,28 @@ public class MoveCube : MonoBehaviour
         return isHorizontal;
     }
 
+    /// <summary>
+    /// Función pública para verificar si el cubo está en vertical
+    /// </summary>
     public bool IsInVerticalPosition()
     {
         return !IsInHorizontalPosition();
+    }
+
+    /// <summary>
+    /// Función pública para verificar si está cayendo
+    /// </summary>
+    public bool IsFalling()
+    {
+        return isFalling;
+    }
+
+    /// <summary>
+    /// Función pública para verificar si está en movimiento
+    /// </summary>
+    public bool IsMoving()
+    {
+        return isMoving;
     }
 
     // Verifica si el centro está tocando el suelo (para posición vertical)
@@ -416,11 +428,8 @@ public class MoveCube : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(origin, Vector3.down, out hit, totalDist, groundLayerMask))
         {
-            // Si está en vertical sobre una WinTile, debe caer
-            if (hit.collider != null && hit.collider.CompareTag("WinTile"))
-            {
-                return false; // No está "grounded", debe caer
-            }
+            // Si está en vertical sobre una WinTile, NO debe caer (debe poder ganar)
+            // Solo verificamos que toque el suelo
             return true;
         }
 

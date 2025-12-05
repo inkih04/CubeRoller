@@ -23,18 +23,37 @@ public class WinTileS : MonoBehaviour
     {
         if (other.CompareTag("Player") && !hasTriggered)
         {
-            // Verificar si el jugador está en posición VERTICAL
-            if (MoveCube.Instance != null && MoveCube.Instance.IsInVerticalPosition())
+            Debug.Log($"[WinTile] Player entró en el trigger.");
+
+            if (MoveCube.Instance == null)
             {
-                hasTriggered = true;
-                Debug.Log("¡Victoria! El jugador está en posición vertical.");
-                Debug.Log("Cargando nivel: " + nextLevelName);
-                StartCoroutine(LoadNextLevelWithDelay());
+                Debug.LogError("[WinTile] MoveCube.Instance es NULL!");
+                return;
             }
-            else
-            {
-                Debug.Log("El jugador debe estar en posición vertical para ganar.");
-            }
+
+            hasTriggered = true;
+            StartCoroutine(CheckVerticalAfterDelay());
+        }
+    }
+
+    IEnumerator CheckVerticalAfterDelay()
+    {
+        // Esperar 2 segundos antes de comprobar la posición
+        yield return new WaitForSeconds(0.7f);
+
+        bool isVertical = MoveCube.Instance.IsInVerticalPosition();
+        Debug.Log($"[WinTile] IsInVerticalPosition() tras esperar: {isVertical}");
+
+        if (isVertical)
+        {
+            Debug.Log($"<color=green>¡VICTORIA! El jugador está en posición VERTICAL ?</color>");
+            Debug.Log($"<color=cyan>Cargando nivel: {nextLevelName}</color>");
+            StartCoroutine(LoadNextLevelWithDelay());
+        }
+        else
+        {
+            Debug.LogWarning($"<color=yellow>El jugador NO está en vertical después de la espera.</color>");
+            hasTriggered = false; // Permite reintentar la victoria si vuelve a entrar
         }
     }
 

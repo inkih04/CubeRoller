@@ -3167,7 +3167,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1755417507962730814, guid: f1a015ed9d57f724c8db43a4132c0f6e, type: 3}
       propertyPath: m_Layer
-      value: 0
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 1755417507962730814, guid: f1a015ed9d57f724c8db43a4132c0f6e, type: 3}
       propertyPath: m_TagString
@@ -3179,11 +3179,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5003318762340934573, guid: f1a015ed9d57f724c8db43a4132c0f6e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 31.598
+      value: 31.658
       objectReference: {fileID: 0}
     - target: {fileID: 5003318762340934573, guid: f1a015ed9d57f724c8db43a4132c0f6e, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -70.776
+      value: -70.762
       objectReference: {fileID: 0}
     - target: {fileID: 5003318762340934573, guid: f1a015ed9d57f724c8db43a4132c0f6e, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3447,6 +3447,7 @@ MonoBehaviour:
   fallRotationSpeed: 180
   maxFallRotation: 90
   fallRespawnTime: 4
+  showOrientationDebug: 1
   ghostPlayer: {fileID: 1321530892}
   sounds:
   - {fileID: 8300000, guid: ea4de65d055d11f45a6a6d62a934c6ee, type: 3}
