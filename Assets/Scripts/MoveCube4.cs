@@ -14,7 +14,7 @@ public class MoveCube : MonoBehaviour
     public float rotSpeed = 300f;
     public float fallSpeed = 10f;
     public float fallRotationSpeed = 180f;
-    public float maxFallRotation = 45f; // Máxima rotación antes de solo caer
+    public float maxFallRotation = 90f; // Máxima rotación antes de solo caer
 
     [Header("Referencias")]
     public GameObject ghostPlayer;
@@ -36,6 +36,7 @@ public class MoveCube : MonoBehaviour
     // Variables para la animación de caída
     private Vector3 fallPivot;
     private Vector3 fallRotationAxis;
+    private float fallRotationDirection = 1f;
 
     InputAction moveAction;
     LayerMask groundLayerMask;
@@ -171,7 +172,7 @@ public class MoveCube : MonoBehaviour
                 {
                     rotStep = maxFallRotation - fallRotationAmount;
                 }
-                transform.RotateAround(fallPivot, fallRotationAxis, rotStep);
+                transform.RotateAround(fallPivot, fallRotationAxis, rotStep * fallRotationDirection);
                 fallRotationAmount += rotStep;
             }
             return;
@@ -394,8 +395,11 @@ public class MoveCube : MonoBehaviour
         // Si solo una mitad está en el suelo, calcular el pivote para la animación de caída
         if (!isGrounded && (half1Grounded || half2Grounded))
         {
+            // Determinar cuál mitad está en el aire
+            Vector3 airborneCenter = half2Grounded ? center1 : center2;
             Vector3 groundedCenter = half1Grounded ? center1 : center2;
-            CalculateFallPivot(groundedCenter, longAxisDirection, half1Grounded);
+
+            CalculateFallPivot(airborneCenter, groundedCenter, longAxisDirection);
         }
 
         return isGrounded;
@@ -417,20 +421,30 @@ public class MoveCube : MonoBehaviour
         return worldLongAxis;
     }
 
-    // Calcula el pivote para la animación de caída
-    void CalculateFallPivot(Vector3 groundedCenter, Vector3 longAxis, bool isFirstHalf)
+    // Calcula el pivote para la animación de caída desde el cubo en el aire
+    void CalculateFallPivot(Vector3 airborneCenter, Vector3 groundedCenter, Vector3 longAxis)
     {
         float halfHeight = boxCollider.bounds.extents.y;
-        fallPivot = groundedCenter + Vector3.down * halfHeight;
+
+        // El pivote está en el borde inferior del cubo que está en el aire
+        // Esto es en el punto donde los dos cubos se tocarían
+        fallPivot = airborneCenter + Vector3.down * halfHeight;
 
         // El eje de rotación es perpendicular al eje largo en el plano horizontal
         fallRotationAxis = Vector3.Cross(Vector3.up, longAxis).normalized;
 
-        // Invertir dirección según qué mitad está en el aire
-        if (!isFirstHalf)
-        {
-            fallRotationAxis = -fallRotationAxis;
-        }
+        // Determinar la dirección de rotación para que caiga hacia afuera
+        // El cubo debe rotar alejándose del cubo que está en el suelo
+        Vector3 directionToAirborne = (airborneCenter - groundedCenter).normalized;
+
+        // Producto cruz para determinar si la rotación debe ser positiva o negativa
+        Vector3 testRotation = Vector3.Cross(fallRotationAxis, Vector3.down);
+        float dotProduct = Vector3.Dot(testRotation, directionToAirborne);
+
+        // INVERTIDO: para rotar hacia afuera del mapa
+        fallRotationDirection = dotProduct > 0 ? -1f : 1f;
+
+        Debug.Log($"Fall Pivot calculado: {fallPivot}, Eje: {fallRotationAxis}, Dirección: {fallRotationDirection}");
     }
 
     void StartFalling()
@@ -453,6 +467,7 @@ public class MoveCube : MonoBehaviour
         {
             Gizmos.color = Color.yellow;
             Gizmos.DrawSphere(fallPivot, 0.15f);
+            Gizmos.color = Color.cyan;
             Gizmos.DrawRay(fallPivot, fallRotationAxis * 0.5f);
         }
     }
