@@ -14,12 +14,12 @@ public class MoveCube : MonoBehaviour
     public float rotSpeed = 300f;
     public float fallSpeed = 10f;
     public float fallRotationSpeed = 180f;
-    public float maxFallRotation = 70f; // Máxima rotación antes de solo caer
-    public float fallRespawnTime = 5f; // Tiempo antes de respawnear tras caer
+    public float maxFallRotation = 70f; 
+    public float fallRespawnTime = 5f;
 
     [Header("Debug")]
     public bool showOrientationDebug = true;
-    private float debugUpdateInterval = 0.5f; // Actualizar debug cada 0.5 segundos
+    private float debugUpdateInterval = 0.5f; 
     private float debugTimer = 0f;
     private string lastOrientationDebug = "";
 
@@ -31,8 +31,8 @@ public class MoveCube : MonoBehaviour
 
     private bool isMoving = false;
     private bool isFalling = false;
-    private float fallRotationAmount = 0f; // Cuánto ha rotado durante la caída
-    private float fallTimer = 0f; // Tiempo que lleva cayendo
+    private float fallRotationAmount = 0f;
+    private float fallTimer = 0f; 
     private int moveCount = 0;
 
     private Vector3 pivot;
@@ -41,7 +41,6 @@ public class MoveCube : MonoBehaviour
     private float currentRotated = 0f;
     private float rotationDirection = 0f;
 
-    // Variables para la animación de caída
     private Vector3 fallPivot;
     private Vector3 fallRotationAxis;
     private float fallRotationDirection = 1f;
@@ -169,7 +168,6 @@ public class MoveCube : MonoBehaviour
 
     void Update()
     {
-        // ===== DEBUG DE ORIENTACIÓN CORREGIDO =====
         if (showOrientationDebug && !isMoving && boxCollider != null)
         {
             debugTimer += Time.deltaTime;
@@ -180,7 +178,6 @@ public class MoveCube : MonoBehaviour
                 bool isHorizontal = IsInHorizontalPosition();
                 bool isVertical = !isHorizontal;
 
-                // ? CORRECTO: Usar Bounds.size (ya está en espacio mundial)
                 Vector3 worldSize = boxCollider.bounds.size;
                 float worldHeight = worldSize.y;
                 float worldMaxHorizontal = Mathf.Max(worldSize.x, worldSize.z);
@@ -198,7 +195,7 @@ public class MoveCube : MonoBehaviour
                 }
             }
         }
-        // ===== FIN DEBUG =====
+
 
         if (isFalling)
         {
@@ -353,70 +350,59 @@ public class MoveCube : MonoBehaviour
         }
     }
 
-    // Nueva función mejorada para detectar si está en el suelo
     bool IsGroundedAdvanced()
     {
         if (boxCollider == null) return false;
         if (isMoving) return true;
 
-        // Determinar si está en horizontal o vertical
         bool isHorizontal = IsInHorizontalPosition();
 
         if (isHorizontal)
         {
-            // En horizontal: verificar ambas mitades del rectángulo
+
             return CheckBothHalvesGrounded();
         }
         else
         {
-            // En vertical: usar el raycast desde el centro (comportamiento original)
+
             return CheckCenterGrounded();
         }
     }
 
-    // Determina si el cubo está en posición horizontal
     bool IsInHorizontalPosition()
     {
         if (boxCollider == null) return false;
 
-        // Usar bounds.size directamente - YA está en espacio mundial correcto
+
         Vector3 worldSize = boxCollider.bounds.size;
 
-        float worldHeight = worldSize.y;  // Altura real en el mundo
-        float worldMaxHorizontal = Mathf.Max(worldSize.x, worldSize.z);  // Máxima dimensión horizontal
+        float worldHeight = worldSize.y; 
+        float worldMaxHorizontal = Mathf.Max(worldSize.x, worldSize.z);  
 
-        // VERTICAL: altura > ancho (ej: 2.0 > 1.0) 
-        // HORIZONTAL: altura < ancho (ej: 1.0 < 2.0)
+
         bool isHorizontal = worldHeight < worldMaxHorizontal;
 
         return isHorizontal;
     }
 
-    /// <summary>
-    /// Función pública para verificar si el cubo está en vertical
-    /// </summary>
+
     public bool IsInVerticalPosition()
     {
         return !IsInHorizontalPosition();
     }
 
-    /// <summary>
-    /// Función pública para verificar si está cayendo
-    /// </summary>
+
     public bool IsFalling()
     {
         return isFalling;
     }
 
-    /// <summary>
-    /// Función pública para verificar si está en movimiento
-    /// </summary>
+
     public bool IsMoving()
     {
         return isMoving;
     }
 
-    // Verifica si el centro está tocando el suelo (para posición vertical)
     bool CheckCenterGrounded()
     {
         float halfHeight = boxCollider.bounds.extents.y;
@@ -432,7 +418,7 @@ public class MoveCube : MonoBehaviour
             if (hit.collider != null &&  hit.collider.CompareTag("WinTile") && hit.collider.gameObject.layer == LayerMask.NameToLayer("Ground"))
             {
                 Debug.Log("[MoveCube] Detectada WinTile debajo en layer Ground (posición VERTICAL) -> se permite caer.");
-                return false; // FORZAMOS caída
+                return false; 
             }
             return true;
         }
@@ -440,49 +426,45 @@ public class MoveCube : MonoBehaviour
         return false;
     }
 
-    // Verifica si ambas mitades del rectángulo están tocando el suelo
+
     bool CheckBothHalvesGrounded()
     {
-        // Obtener la dirección del eje largo del cubo
+
         Vector3 longAxisDirection = GetLongAxisDirection();
 
-        // La distancia desde el centro a cada cubo es 0.5 unidades (la mitad de 1 unidad)
-        // ya que el cubo tiene escala 2 en un eje, pero queremos el centro de cada "cubo"
+
         float offsetDistance = 0.5f;
 
-        // Posiciones de los centros de cada cubo
+
         Vector3 center1 = transform.position + longAxisDirection * offsetDistance;
         Vector3 center2 = transform.position - longAxisDirection * offsetDistance;
 
-        // Distancia de raycast
+
         float halfHeight = boxCollider.bounds.extents.y;
         float rayDistance = halfHeight + 0.15f;
 
-        // Trazar rayos desde cada centro
+
         RaycastHit hit1, hit2;
         bool half1Grounded = Physics.Raycast(center1, Vector3.down, out hit1, rayDistance, groundLayerMask);
         bool half2Grounded = Physics.Raycast(center2, Vector3.down, out hit2, rayDistance, groundLayerMask);
 
-        // Verificar si alguna de las tiles es WinTile
+
         bool half1IsWinTile = half1Grounded && hit1.collider != null && hit1.collider.CompareTag("WinTile");
         bool half2IsWinTile = half2Grounded && hit2.collider != null && hit2.collider.CompareTag("WinTile");
 
-        // Si hay una WinTile debajo, tratarla como suelo sólido (no caer)
-        // Esto permite que el cubo horizontal se mantenga sobre la WinTile
+
         if (half1IsWinTile) half1Grounded = true;
         if (half2IsWinTile) half2Grounded = true;
 
-        // Debug visual
         Debug.DrawRay(center1, Vector3.down * rayDistance, half1Grounded ? Color.green : Color.red, 0.1f);
         Debug.DrawRay(center2, Vector3.down * rayDistance, half2Grounded ? Color.green : Color.red, 0.1f);
 
-        // Si alguna mitad no está tocando el suelo, el cubo debe caer
+
         bool isGrounded = half1Grounded && half2Grounded;
 
-        // Si solo una mitad está en el suelo, calcular el pivote para la animación de caída
+
         if (!isGrounded && (half1Grounded || half2Grounded))
         {
-            // Determinar cuál mitad está en el aire
             Vector3 airborneCenter = half2Grounded ? center1 : center2;
             Vector3 groundedCenter = half1Grounded ? center1 : center2;
 
@@ -492,43 +474,40 @@ public class MoveCube : MonoBehaviour
         return isGrounded;
     }
 
-    // Obtiene la dirección del eje largo del cubo en espacio mundial
+
     Vector3 GetLongAxisDirection()
     {
-        // Con escala (1, 1, 2), el eje Z local es el largo
+
         Vector3 localLongAxis = new Vector3(0, 0, 1);
 
-        // Transformarlo al espacio mundial
+
         Vector3 worldLongAxis = transform.TransformDirection(localLongAxis);
 
-        // Proyectar en el plano horizontal (XZ) y normalizar
+
         worldLongAxis.y = 0;
         worldLongAxis.Normalize();
 
         return worldLongAxis;
     }
 
-    // Calcula el pivote para la animación de caída desde el cubo en el aire
+
     void CalculateFallPivot(Vector3 airborneCenter, Vector3 groundedCenter, Vector3 longAxis)
     {
         float halfHeight = boxCollider.bounds.extents.y;
 
-        // El pivote está en el borde inferior del cubo que está en el aire
-        // Esto es en el punto donde los dos cubos se tocarían
+
         fallPivot = airborneCenter + Vector3.down * halfHeight;
 
-        // El eje de rotación es perpendicular al eje largo en el plano horizontal
+
         fallRotationAxis = Vector3.Cross(Vector3.up, longAxis).normalized;
 
-        // Determinar la dirección de rotación para que caiga hacia afuera
-        // El cubo debe rotar alejándose del cubo que está en el suelo
+
         Vector3 directionToAirborne = (airborneCenter - groundedCenter).normalized;
 
-        // Producto cruz para determinar si la rotación debe ser positiva o negativa
+
         Vector3 testRotation = Vector3.Cross(fallRotationAxis, Vector3.down);
         float dotProduct = Vector3.Dot(testRotation, directionToAirborne);
 
-        // INVERTIDO: para rotar hacia afuera del mapa
         fallRotationDirection = dotProduct > 0 ? -1f : 1f;
 
         Debug.Log($"Fall Pivot calculado: {fallPivot}, Eje: {fallRotationAxis}, Dirección: {fallRotationDirection}");

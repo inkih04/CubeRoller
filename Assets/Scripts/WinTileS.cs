@@ -38,7 +38,6 @@ public class WinTileS : MonoBehaviour
 
     IEnumerator CheckVerticalAfterDelay()
     {
-        // Esperar 2 segundos antes de comprobar la posición
         yield return new WaitForSeconds(0.3f);
 
         bool isVertical = MoveCube.Instance.IsInVerticalPosition();
@@ -53,7 +52,7 @@ public class WinTileS : MonoBehaviour
         else
         {
             Debug.LogWarning($"<color=yellow>El jugador NO está en vertical después de la espera.</color>");
-            hasTriggered = false; // Permite reintentar la victoria si vuelve a entrar
+            hasTriggered = false; 
         }
     }
 

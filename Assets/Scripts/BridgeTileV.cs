@@ -18,7 +18,6 @@ public class BridgeTileV : MonoBehaviour
 
     IEnumerator CheckVerticalAfterDelay(GameObject player)
     {
-        // Igual que WinTile: micro espera para que termine la animación de giro
         yield return new WaitForSeconds(0.3f);
 
         bool isVertical = MoveCube.Instance != null
@@ -41,7 +40,6 @@ public class BridgeTileV : MonoBehaviour
 
     private bool IsPlayerVertical(GameObject player)
     {
-        // Fallback por si MoveCube no está disponible
         return player.transform.up.y > 0.9f;
     }
 
@@ -56,7 +54,6 @@ public class BridgeTileV : MonoBehaviour
             cylinderTransform.localScale = currentScale;
         }
 
-        // Activar GhostTileV
         GameObject[] ghostTiles = GameObject.FindGameObjectsWithTag("GhostTileV");
 
         foreach (GameObject tile in ghostTiles)
