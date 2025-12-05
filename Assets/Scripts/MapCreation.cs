@@ -1,54 +1,83 @@
-using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-
-// MapCreation instances multiple copies of a tile prefab to build a level
-// following the contents of a map file
-
-
-public class MapCreation : MonoBehaviour
+public class LevelMapAnimator : MonoBehaviour
 {
-    public TextAsset map; 		// Text file containing the map
-    public GameObject tile; 	// Tile prefab used to instance and build the level
-    public GameObject winTile;
-
-    // Start is called once after the MonoBehaviour is created
-    void Start()
+    private class TileData
     {
-        char[] seps = {' ', '\n', '\r'}; 	// Characters that act as separators between numbers
-        string [] snums; 					// Substrings read from the map file
-        int [] nums; 						// Numbers converted from strings in snums
-
-		// Split the string of the whole map file into substrings separated by spaces
-        snums = map.text.Split(seps, StringSplitOptions.RemoveEmptyEntries);
-		
-		// Convert the substrings in snums to integers
-        nums = new int[snums.Length];
-        for (int i = 0; i < snums.Length; i++)
-        {
-            nums[i] = int.Parse(snums[i]);
-        }
-		
-		// Create the level. First get the size in tiles of the map from nums
-        int sizeX = nums[0], sizeZ = nums[1];
-		
-        for(int z=0; z<sizeZ; z++)
-            for(int x=0; x<sizeX; x++)
-            {  
-                int tileId = nums[2 + x + z * sizeX];
-                if (tileId%2 == 0)
-                {
-                    GameObject obj = Instantiate(tile, new Vector3(x, -0.05f, z), transform.rotation);
-                    obj.transform.parent = transform;
-                }
-
-                else if (tileId == 9)
-                {
-                    GameObject obj = Instantiate(winTile, new Vector3(x, 0.0f, z), transform.rotation);
-                    obj.transform.parent = transform;
-                }
-
-            }
+        public Transform transform;
+        public Vector3 originalPosition;
     }
 
+    private List<TileData> tiles = new List<TileData>();
+
+    void Awake()
+    {
+        // Guardar posiciones iniciales
+        foreach (Transform child in transform)
+        {
+            tiles.Add(new TileData { transform = child, originalPosition = child.position });
+        }
+    }
+
+    public void HideLevelInSky(float height)
+    {
+        foreach (var tile in tiles)
+        {
+            if (tile.transform != null)
+                tile.transform.position = tile.originalPosition + Vector3.up * height;
+        }
+    }
+
+    // Animación de entrada (Cae del cielo al sitio)
+    public IEnumerator AnimateMapFall(float speed)
+    {
+        bool allTilesLanded = false;
+        while (!allTilesLanded)
+        {
+            allTilesLanded = true;
+            foreach (var tile in tiles)
+            {
+                if (tile.transform == null) continue;
+                if (Vector3.Distance(tile.transform.position, tile.originalPosition) > 0.01f)
+                {
+                    tile.transform.position = Vector3.MoveTowards(tile.transform.position, tile.originalPosition, speed * Time.deltaTime);
+                    allTilesLanded = false;
+                }
+                else
+                {
+                    tile.transform.position = tile.originalPosition;
+                }
+            }
+            yield return null;
+        }
+    }
+
+    // --- NUEVO: Animación de salida (Cae del sitio al abismo) ---
+    public IEnumerator AnimateMapDrop(float dropDepth, float speed)
+    {
+        bool allTilesGone = false;
+        // Destino: muy abajo
+        float targetY = -dropDepth;
+
+        while (!allTilesGone)
+        {
+            allTilesGone = true;
+            foreach (var tile in tiles)
+            {
+                if (tile.transform == null) continue;
+
+                // Movemos hacia abajo
+                Vector3 targetPos = new Vector3(tile.originalPosition.x, targetY, tile.originalPosition.z);
+
+                if (tile.transform.position.y > targetY + 0.1f)
+                {
+                    tile.transform.position = Vector3.MoveTowards(tile.transform.position, targetPos, speed * Time.deltaTime);
+                    allTilesGone = false;
+                }
+            }
+            yield return null;
+        }
+    }
 }
