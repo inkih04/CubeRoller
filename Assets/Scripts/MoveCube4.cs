@@ -14,7 +14,8 @@ public class MoveCube : MonoBehaviour
     public float rotSpeed = 300f;
     public float fallSpeed = 10f;
     public float fallRotationSpeed = 180f;
-    public float maxFallRotation = 90f; // Máxima rotación antes de solo caer
+    public float maxFallRotation = 70f; // Máxima rotación antes de solo caer
+    public float fallRespawnTime = 5f; // Tiempo antes de respawnear tras caer
 
     [Header("Referencias")]
     public GameObject ghostPlayer;
@@ -25,6 +26,7 @@ public class MoveCube : MonoBehaviour
     private bool isMoving = false;
     private bool isFalling = false;
     private float fallRotationAmount = 0f; // Cuánto ha rotado durante la caída
+    private float fallTimer = 0f; // Tiempo que lleva cayendo
     private int moveCount = 0;
 
     private Vector3 pivot;
@@ -95,6 +97,7 @@ public class MoveCube : MonoBehaviour
             isMoving = false;
             isFalling = false;
             fallRotationAmount = 0f;
+            fallTimer = 0f;
         }
         else
         {
@@ -162,6 +165,16 @@ public class MoveCube : MonoBehaviour
     {
         if (isFalling)
         {
+            // Incrementar el temporizador de caída
+            fallTimer += Time.deltaTime;
+
+            // Si ha pasado el tiempo de respawn, teleportar al spawn
+            if (fallTimer >= fallRespawnTime)
+            {
+                RespawnPlayer();
+                return;
+            }
+
             // Animación de caída con rotación limitada
             transform.Translate(Vector3.down * fallSpeed * Time.deltaTime, Space.World);
 
@@ -451,8 +464,30 @@ public class MoveCube : MonoBehaviour
     {
         isFalling = true;
         fallRotationAmount = 0f;
+        fallTimer = 0f;
         if (fallSound != null)
             AudioSource.PlayClipAtPoint(fallSound, transform.position);
+    }
+
+    void RespawnPlayer()
+    {
+        GameObject spawnPoint = GameObject.FindGameObjectWithTag("Respawn");
+
+        if (spawnPoint != null)
+        {
+            transform.position = spawnPoint.transform.position;
+            transform.rotation = spawnPoint.transform.rotation;
+
+            isFalling = false;
+            fallRotationAmount = 0f;
+            fallTimer = 0f;
+
+            Debug.Log("Jugador respawneado tras caída");
+        }
+        else
+        {
+            Debug.LogError("No se encontró el punto de spawn para respawnear");
+        }
     }
 
     private void OnDrawGizmos()

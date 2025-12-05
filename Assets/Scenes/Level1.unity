@@ -153,6 +153,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 844049641}
   - {fileID: 1174651324}
   - {fileID: 724927681}
   - {fileID: 198858247}
@@ -192,7 +193,6 @@ Transform:
   - {fileID: 1936176546}
   - {fileID: 358872877}
   - {fileID: 1601312822}
-  - {fileID: 844049641}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &124604713
@@ -3179,7 +3179,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5003318762340934573, guid: f1a015ed9d57f724c8db43a4132c0f6e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 31.616001
+      value: 31.669
       objectReference: {fileID: 0}
     - target: {fileID: 5003318762340934573, guid: f1a015ed9d57f724c8db43a4132c0f6e, type: 3}
       propertyPath: m_LocalPosition.z
@@ -3423,7 +3423,7 @@ Transform:
   m_GameObject: {fileID: 1402451728}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 5.31, y: 1.722, z: 4.989}
+  m_LocalPosition: {x: 5.31, y: 1.55, z: 4.989}
   m_LocalScale: {x: 1, y: 1, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3444,6 +3444,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MoveCube
   rotSpeed: 150
   fallSpeed: 2
+  fallRotationSpeed: 180
+  maxFallRotation: 90
+  fallRespawnTime: 4
   ghostPlayer: {fileID: 1321530892}
   sounds:
   - {fileID: 8300000, guid: ea4de65d055d11f45a6a6d62a934c6ee, type: 3}
@@ -3807,7 +3810,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4870623685148583806, guid: ba807136982f4c04b8f3cd8f74fda6bd, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 32.722
+      value: 32.55
       objectReference: {fileID: 0}
     - target: {fileID: 4870623685148583806, guid: ba807136982f4c04b8f3cd8f74fda6bd, type: 3}
       propertyPath: m_LocalPosition.z
