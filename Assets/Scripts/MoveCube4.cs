@@ -32,8 +32,8 @@ public class MoveCube : MonoBehaviour
 
     private bool isMoving = false;
     private bool isFalling = false;
-    private bool isVictory = false; // Para evitar muerte durante victoria
-    private bool controlsActive = true; // Para desactivar controles durante animaciones
+    private bool isVictory = false; 
+    private bool controlsActive = true; 
     private float fallRotationAmount = 0f;
     private float fallTimer = 0f;
     private int moveCount = 0;
@@ -43,7 +43,7 @@ public class MoveCube : MonoBehaviour
     private float degreesToRotate = 90f;
     private float currentRotated = 0f;
     private float rotationDirection = 0f;
-    private float targetX, targetZ; // Para spawn desde el cielo
+    private float targetX, targetZ; 
 
     private Vector3 fallPivot;
     private Vector3 fallRotationAxis;
@@ -101,14 +101,13 @@ public class MoveCube : MonoBehaviour
         fallTimer = 0f;
         controlsActive = true;
 
-        // Posición segura temporal
+
         transform.position = Vector3.up * 50f;
         this.enabled = true;
 
         // Ocultar jugador inicialmente
         HidePlayer();
 
-        // Re-asignar contador de movimientos
         GameObject counterGO = GameObject.FindGameObjectWithTag("MoveCounter");
         if (counterGO != null)
         {
@@ -133,7 +132,6 @@ public class MoveCube : MonoBehaviour
 
     void Start()
     {
-        // Ocultar ghost player inicialmente
         if (ghostPlayer != null)
         {
             Renderer[] renderers = ghostPlayer.GetComponentsInChildren<Renderer>(true);
@@ -173,7 +171,6 @@ public class MoveCube : MonoBehaviour
         rb.isKinematic = true;
     }
 
-    // ==================== MÉTODOS DE ANIMACIÓN ====================
 
     public void HidePlayer()
     {
@@ -238,7 +235,6 @@ public class MoveCube : MonoBehaviour
         if (!active) isMoving = false;
     }
 
-    // ==================== MÉTODOS PARA WINTILE ====================
 
     public bool IsStopped()
     {
@@ -266,10 +262,9 @@ public class MoveCube : MonoBehaviour
         if (fallSound != null)
             AudioSource.PlayClipAtPoint(fallSound, transform.position);
 
-        // Desactivar collider para atravesar el suelo
         boxCollider.enabled = false;
 
-        float dropDistance = 5f;
+        float dropDistance = 20f;
         Vector3 startPos = transform.position;
         Vector3 targetPos = startPos + Vector3.down * dropDistance;
         float t = 0;
@@ -293,11 +288,9 @@ public class MoveCube : MonoBehaviour
         boxCollider.enabled = true;
     }
 
-    // ==================== UPDATE ====================
 
     void Update()
     {
-        // CORRECCIÓN CRÍTICA: NO MORIR SI ES VICTORIA
         if (!isVictory && transform.position.y < -5f)
         {
             LevelSequenceManager manager = FindObjectOfType<LevelSequenceManager>();
@@ -311,7 +304,6 @@ public class MoveCube : MonoBehaviour
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
 
-        // Debug de orientación
         if (showOrientationDebug && !isMoving && boxCollider != null)
         {
             debugTimer += Time.deltaTime;
@@ -340,10 +332,8 @@ public class MoveCube : MonoBehaviour
             }
         }
 
-        // Si estamos cayendo durante victoria (collider desactivado), la corrutina maneja todo
         if (isVictory) return;
 
-        // Lógica de caída por muerte
         if (isFalling)
         {
             fallTimer += Time.deltaTime;

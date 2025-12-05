@@ -13,9 +13,9 @@ public class LevelSequenceManager : MonoBehaviour
     public LevelMapAnimator levelAnimator;
 
     [Header("Animation Settings")]
-    public float tileDropHeight = 20f;   // Altura desde donde vienen
-    public float tileExitDepth = 20f;    // Profundidad a donde van al acabar
-    public float tileSpeed = 25f;        // Velocidad
+    public float tileDropHeight = 20f;   
+    public float tileExitDepth = 20f;   
+    public float tileSpeed = 25f;        
     public float startDelay = 1f;
 
     private void Start()
@@ -26,7 +26,7 @@ public class LevelSequenceManager : MonoBehaviour
         if (blackScreenGroup != null)
         {
             blackScreenGroup.alpha = 1;
-            if (levelTitleText != null) levelTitleText.text = "Nivel " + (SceneManager.GetActiveScene().buildIndex);
+            if (levelTitleText != null) levelTitleText.text = "Level " + (SceneManager.GetActiveScene().buildIndex);
         }
 
         if (levelAnimator != null) levelAnimator.HideLevelInSky(tileDropHeight);
@@ -38,7 +38,7 @@ public class LevelSequenceManager : MonoBehaviour
     {
         yield return new WaitForSeconds(startDelay);
 
-        // Fade In Pantalla
+ 
         float t = 0;
         while (t < 1)
         {
@@ -47,16 +47,16 @@ public class LevelSequenceManager : MonoBehaviour
             yield return null;
         }
 
-        // Mapa cae del cielo
+
         if (levelAnimator != null)
             yield return StartCoroutine(levelAnimator.AnimateMapFall(tileSpeed));
 
-        // Jugador aparece
+
         if (MoveCube.Instance != null)
             MoveCube.Instance.SpawnPlayerFromSky(tileDropHeight);
     }
 
-    // --- REINICIAR NIVEL (MUERTE) ---
+
     public void RestartLevel()
     {
         StartCoroutine(RestartSequence());
@@ -64,17 +64,17 @@ public class LevelSequenceManager : MonoBehaviour
 
     IEnumerator RestartSequence()
     {
-        // 1. El mapa se cae al vacío
+
         if (levelAnimator != null)
             yield return StartCoroutine(levelAnimator.AnimateMapDrop(tileExitDepth, tileSpeed));
 
-        yield return new WaitForSeconds(0.2f); // Pequeña pausa dramática
+        yield return new WaitForSeconds(0.2f); 
 
-        // 2. Recargar escena
+
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    // --- SIGUIENTE NIVEL (VICTORIA) ---
+
     public void LoadNextLevel(string nextLevelName)
     {
         StartCoroutine(NextLevelSequence(nextLevelName));
@@ -82,14 +82,11 @@ public class LevelSequenceManager : MonoBehaviour
 
     IEnumerator NextLevelSequence(string nextLevelName)
     {
-        // Esperar a que el jugador termine de caer por el agujero (si es victoria)
         yield return new WaitForSeconds(1f);
 
-        // 1. El mapa se cae al vacío (efecto visual)
         if (levelAnimator != null)
             yield return StartCoroutine(levelAnimator.AnimateMapDrop(tileExitDepth, tileSpeed));
 
-        // 2. Fade a negro
         float t = 0;
         while (t < 1)
         {
@@ -98,7 +95,6 @@ public class LevelSequenceManager : MonoBehaviour
             yield return null;
         }
 
-        // 3. Cargar nivel
         SceneManager.LoadScene(nextLevelName);
     }
 }
