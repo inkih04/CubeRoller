@@ -373,7 +373,19 @@ public class MoveCube : MonoBehaviour
         float totalDist = halfHeight + 0.15f;
 
         Debug.DrawRay(origin, Vector3.down * totalDist, Color.cyan, 0.1f);
-        return Physics.Raycast(origin, Vector3.down, totalDist, groundLayerMask);
+
+        RaycastHit hit;
+        if (Physics.Raycast(origin, Vector3.down, out hit, totalDist, groundLayerMask))
+        {
+            // Si está en vertical sobre una WinTile, debe caer
+            if (hit.collider != null && hit.collider.CompareTag("WinTile"))
+            {
+                return false; // No está "grounded", debe caer
+            }
+            return true;
+        }
+
+        return false;
     }
 
     // Verifica si ambas mitades del rectángulo están tocando el suelo
@@ -395,8 +407,18 @@ public class MoveCube : MonoBehaviour
         float rayDistance = halfHeight + 0.15f;
 
         // Trazar rayos desde cada centro
-        bool half1Grounded = Physics.Raycast(center1, Vector3.down, rayDistance, groundLayerMask);
-        bool half2Grounded = Physics.Raycast(center2, Vector3.down, rayDistance, groundLayerMask);
+        RaycastHit hit1, hit2;
+        bool half1Grounded = Physics.Raycast(center1, Vector3.down, out hit1, rayDistance, groundLayerMask);
+        bool half2Grounded = Physics.Raycast(center2, Vector3.down, out hit2, rayDistance, groundLayerMask);
+
+        // Verificar si alguna de las tiles es WinTile
+        bool half1IsWinTile = half1Grounded && hit1.collider != null && hit1.collider.CompareTag("WinTile");
+        bool half2IsWinTile = half2Grounded && hit2.collider != null && hit2.collider.CompareTag("WinTile");
+
+        // Si hay una WinTile debajo, tratarla como suelo sólido (no caer)
+        // Esto permite que el cubo horizontal se mantenga sobre la WinTile
+        if (half1IsWinTile) half1Grounded = true;
+        if (half2IsWinTile) half2Grounded = true;
 
         // Debug visual
         Debug.DrawRay(center1, Vector3.down * rayDistance, half1Grounded ? Color.green : Color.red, 0.1f);
