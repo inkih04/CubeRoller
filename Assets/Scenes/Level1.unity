@@ -3446,7 +3446,7 @@ MonoBehaviour:
   fallSpeed: 2
   fallRotationSpeed: 180
   maxFallRotation: 100
-  fallRespawnTime: 4
+  fallRespawnTime: 3
   showOrientationDebug: 1
   ghostPlayer: {fileID: 1321530892}
   sounds:

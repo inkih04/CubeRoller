@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 public class WinTileS : MonoBehaviour
 {
     public string nextLevelName = "Level2";
-    public float delayBeforeLoad = 1f;
+    public float delayBeforeLoad = 0.2f;
     public TMP_Text levelText;
     private bool hasTriggered = false;
 
@@ -39,7 +39,7 @@ public class WinTileS : MonoBehaviour
     IEnumerator CheckVerticalAfterDelay()
     {
         // Esperar 2 segundos antes de comprobar la posición
-        yield return new WaitForSeconds(0.7f);
+        yield return new WaitForSeconds(0.3f);
 
         bool isVertical = MoveCube.Instance.IsInVerticalPosition();
         Debug.Log($"[WinTile] IsInVerticalPosition() tras esperar: {isVertical}");

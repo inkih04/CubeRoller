@@ -428,8 +428,12 @@ public class MoveCube : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(origin, Vector3.down, out hit, totalDist, groundLayerMask))
         {
-            // Si está en vertical sobre una WinTile, NO debe caer (debe poder ganar)
-            // Solo verificamos que toque el suelo
+
+            if (hit.collider != null &&  hit.collider.CompareTag("WinTile") && hit.collider.gameObject.layer == LayerMask.NameToLayer("Ground"))
+            {
+                Debug.Log("[MoveCube] Detectada WinTile debajo en layer Ground (posición VERTICAL) -> se permite caer.");
+                return false; // FORZAMOS caída
+            }
             return true;
         }
 
