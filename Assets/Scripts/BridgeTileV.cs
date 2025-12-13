@@ -4,12 +4,12 @@ using UnityEngine;
 public class BridgeTileV : MonoBehaviour
 {
     private bool hasBeenPressed = false;
-
+    private bool isCheckingInProgress = false; // Evita múltiples checks simultáneos
     [SerializeField] private Transform cylinderTransform;
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player") && !hasBeenPressed)
+        if (other.CompareTag("Player") && !hasBeenPressed && !isCheckingInProgress)
         {
             Debug.Log("[BridgeTileV] Player ha entrado en trigger.");
             StartCoroutine(CheckVerticalAfterDelay(other.gameObject));
@@ -18,13 +18,15 @@ public class BridgeTileV : MonoBehaviour
 
     IEnumerator CheckVerticalAfterDelay(GameObject player)
     {
+        isCheckingInProgress = true;
+
         yield return new WaitForSeconds(0.7f);
 
         bool isVertical = MoveCube.Instance != null
             ? MoveCube.Instance.IsInVerticalPosition()
             : IsPlayerVertical(player);
 
-        Debug.Log($"[BridgeTileV] ?Vertical despu?s de delay?: {isVertical}");
+        Debug.Log($"[BridgeTileV] ¿Vertical después de delay?: {isVertical}");
 
         if (isVertical)
         {
@@ -36,6 +38,8 @@ public class BridgeTileV : MonoBehaviour
         {
             Debug.Log("<color=yellow>[BridgeTileV] No estaba en vertical, no se activa.</color>");
         }
+
+        isCheckingInProgress = false; // Permitir nuevos intentos
     }
 
     private bool IsPlayerVertical(GameObject player)
@@ -55,12 +59,10 @@ public class BridgeTileV : MonoBehaviour
         }
 
         GameObject[] ghostTiles = GameObject.FindGameObjectsWithTag("GhostTileV");
-
         foreach (GameObject tile in ghostTiles)
         {
             tile.SetActive(true);
             Renderer renderer = tile.GetComponent<Renderer>();
-
             if (renderer != null)
                 renderer.enabled = true;
         }
@@ -69,6 +71,6 @@ public class BridgeTileV : MonoBehaviour
     public void ResetTile()
     {
         hasBeenPressed = false;
+        isCheckingInProgress = false;
     }
-
 }

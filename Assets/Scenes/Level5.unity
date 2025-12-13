@@ -1779,6 +1779,30 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 42978050}
     m_Modifications:
+    - target: {fileID: 301631512182203534, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
+      propertyPath: targetTiles.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 301631512182203534, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
+      propertyPath: oppositeTiles.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 301631512182203534, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
+      propertyPath: 'targetTiles.Array.data[0]'
+      value: 
+      objectReference: {fileID: 287726838}
+    - target: {fileID: 301631512182203534, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
+      propertyPath: 'targetTiles.Array.data[1]'
+      value: 
+      objectReference: {fileID: 673739885}
+    - target: {fileID: 301631512182203534, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
+      propertyPath: 'oppositeTiles.Array.data[0]'
+      value: 
+      objectReference: {fileID: 895201941}
+    - target: {fileID: 301631512182203534, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
+      propertyPath: 'oppositeTiles.Array.data[1]'
+      value: 
+      objectReference: {fileID: 855226797}
     - target: {fileID: 1991569964679230053, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
       propertyPath: m_LocalPosition.x
       value: 18.430023
@@ -1846,6 +1870,10 @@ PrefabInstance:
     - target: {fileID: 5905281330473358404, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
       propertyPath: m_Name
       value: '!BridgeTileH 1'
+      objectReference: {fileID: 0}
+    - target: {fileID: 8563603888461110563, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 0}
@@ -2381,6 +2409,30 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 42978050}
     m_Modifications:
+    - target: {fileID: 301631512182203534, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
+      propertyPath: targetTiles.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 301631512182203534, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
+      propertyPath: oppositeTiles.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 301631512182203534, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
+      propertyPath: 'targetTiles.Array.data[0]'
+      value: 
+      objectReference: {fileID: 91748962}
+    - target: {fileID: 301631512182203534, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
+      propertyPath: 'targetTiles.Array.data[1]'
+      value: 
+      objectReference: {fileID: 1621142994}
+    - target: {fileID: 301631512182203534, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
+      propertyPath: 'oppositeTiles.Array.data[0]'
+      value: 
+      objectReference: {fileID: 1154300552}
+    - target: {fileID: 301631512182203534, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
+      propertyPath: 'oppositeTiles.Array.data[1]'
+      value: 
+      objectReference: {fileID: 1853257414}
     - target: {fileID: 1991569964679230053, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
       propertyPath: m_LocalPosition.x
       value: 16.430023
@@ -2456,6 +2508,10 @@ PrefabInstance:
     - target: {fileID: 5905281330473358404, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
       propertyPath: m_Name
       value: '!BridgeTileH 1 (1)'
+      objectReference: {fileID: 0}
+    - target: {fileID: 8563603888461110563, guid: 304ef8cc73478c941be6b32124f7aa60, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 0}

@@ -264,12 +264,11 @@ public class MoveCube : MonoBehaviour
 
         boxCollider.enabled = false;
 
-        float dropDistance = 20f;
+        float dropDistance = 40f;
         Vector3 startPos = transform.position;
         Vector3 targetPos = startPos + Vector3.down * dropDistance;
         float t = 0;
 
-        // Caída suave
         while (t < 1f)
         {
             t += Time.deltaTime * 2f;
@@ -277,14 +276,12 @@ public class MoveCube : MonoBehaviour
             yield return null;
         }
 
-        // Llamar al Manager
         LevelSequenceManager manager = FindObjectOfType<LevelSequenceManager>();
         if (manager != null)
             manager.LoadNextLevel(nextLevel);
         else
             SceneManager.LoadScene(nextLevel);
 
-        // Restaurar collider
         boxCollider.enabled = true;
     }
 
