@@ -5,6 +5,7 @@ public class BridgeButton2 : MonoBehaviour
 {
     [SerializeField] private Transform cylinder;
     [SerializeField] private GameObject[] targetTiles; // Array de tiles que se activarán/desactivarán
+    [SerializeField] private GameObject[] oppositeTiles; // Array de tiles que harán lo contrario
     [SerializeField] private float cylinderDescendAmount = 0.1f;
     [SerializeField] private float cylinderResetTime = 1f;
 
@@ -33,6 +34,15 @@ public class BridgeButton2 : MonoBehaviour
             if (tile != null)
             {
                 SetTileVisibility(tile, true);
+            }
+        }
+
+        // Asegurarse de que todos los tiles opuestos estén invisibles al inicio
+        foreach (GameObject tile in oppositeTiles)
+        {
+            if (tile != null)
+            {
+                SetTileVisibility(tile, false);
             }
         }
     }
@@ -122,6 +132,21 @@ public class BridgeButton2 : MonoBehaviour
                 Debug.Log("Tile " + tile.name + " - Visibilidad cambiada a: " + !isCurrentlyVisible);
             }
         }
+
+        // Hacer lo contrario con los tiles opuestos
+        foreach (GameObject tile in oppositeTiles)
+        {
+            if (tile != null)
+            {
+                // Verificar si el tile está actualmente visible
+                bool isCurrentlyVisible = IsTileVisible(tile);
+
+                // Invertir su visibilidad (será opuesto a targetTiles)
+                SetTileVisibility(tile, !isCurrentlyVisible);
+
+                Debug.Log("Tile opuesto " + tile.name + " - Visibilidad cambiada a: " + !isCurrentlyVisible);
+            }
+        }
     }
 
     private bool IsTileVisible(GameObject tile)
@@ -180,6 +205,15 @@ public class BridgeButton2 : MonoBehaviour
             if (tile != null)
             {
                 SetTileVisibility(tile, true);
+            }
+        }
+
+        // Restaurar todos los tiles opuestos a invisible
+        foreach (GameObject tile in oppositeTiles)
+        {
+            if (tile != null)
+            {
+                SetTileVisibility(tile, false);
             }
         }
     }
