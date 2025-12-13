@@ -16,17 +16,16 @@ public class OrangeTileScript : MonoBehaviour
 
     private void Start()
     {
-        // Obtener el objeto padre
         parentObject = transform.parent != null ? transform.parent.gameObject : gameObject;
 
-        // Buscar o añadir Rigidbody al padre
+
         parentRb = parentObject.GetComponent<Rigidbody>();
         if (parentRb == null)
         {
             parentRb = parentObject.AddComponent<Rigidbody>();
         }
 
-        // Configurar Rigidbody para que no se caiga hasta que lo activemos
+  
         parentRb.isKinematic = true;
         parentRb.useGravity = false;
 
@@ -53,10 +52,10 @@ public class OrangeTileScript : MonoBehaviour
 
     private IEnumerator CheckVerticalAndFall(GameObject player)
     {
-        // Esperar antes de verificar la orientación
+
         yield return new WaitForSeconds(delayBeforeCheck);
 
-        // Verificar si el jugador está en posición vertical
+
         bool isVertical = MoveCube.Instance != null
             ? MoveCube.Instance.IsInVerticalPosition()
             : IsPlayerVertical(player);
@@ -67,10 +66,10 @@ public class OrangeTileScript : MonoBehaviour
         {
             Debug.Log($"<color=orange>[OrangeTile] ¡El suelo padre '{parentObject.name}' se va a caer! 🔥</color>");
 
-            // Pequeño delay adicional antes de caer
+
             yield return new WaitForSeconds(fallDelay);
 
-            // Activar la caída del padre
+
             MakeTileFall();
         }
         else
@@ -89,18 +88,18 @@ public class OrangeTileScript : MonoBehaviour
     {
         hasFallen = true;
 
-        // Activar física en el PADRE
+
         parentRb.isKinematic = false;
         parentRb.useGravity = true;
 
-        // Opcional: aplicar una fuerza inicial hacia abajo para caída más dramática
+
         parentRb.AddForce(Vector3.down * fallSpeed, ForceMode.VelocityChange);
 
-        // Destruir el PADRE después de unos segundos
+
         Destroy(parentObject, destroyAfterSeconds);
     }
 
-    // Método opcional para resetear el tile (si usas un sistema de respawn)
+
     public void ResetTile()
     {
         hasFallen = false;

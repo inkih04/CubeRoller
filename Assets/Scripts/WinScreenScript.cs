@@ -5,7 +5,7 @@ public class WinScreenController : MonoBehaviour
 {
     public void IrAlMenu()
     {
-        SceneManager.LoadScene("MainMenu"); // Asegúrate que tu menú se llama así
+        SceneManager.LoadScene("MainMenu");
     }
 
     public void SalirDelJuego()

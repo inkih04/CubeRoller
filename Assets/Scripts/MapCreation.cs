@@ -14,7 +14,7 @@ public class LevelMapAnimator : MonoBehaviour
 
     void Awake()
     {
-        // Guardar posiciones iniciales
+
         foreach (Transform child in transform)
         {
             tiles.Add(new TileData { transform = child, originalPosition = child.position });
@@ -30,7 +30,7 @@ public class LevelMapAnimator : MonoBehaviour
         }
     }
 
-    // Animación de entrada (Cae del cielo al sitio)
+
     public IEnumerator AnimateMapFall(float speed)
     {
         bool allTilesLanded = false;
@@ -54,11 +54,10 @@ public class LevelMapAnimator : MonoBehaviour
         }
     }
 
-    // --- NUEVO: Animación de salida (Cae del sitio al abismo) ---
+
     public IEnumerator AnimateMapDrop(float dropDepth, float speed)
     {
         bool allTilesGone = false;
-        // Destino: muy abajo
         float targetY = -dropDepth;
 
         while (!allTilesGone)
@@ -68,7 +67,6 @@ public class LevelMapAnimator : MonoBehaviour
             {
                 if (tile.transform == null) continue;
 
-                // Movemos hacia abajo
                 Vector3 targetPos = new Vector3(tile.originalPosition.x, targetY, tile.originalPosition.z);
 
                 if (tile.transform.position.y > targetY + 0.1f)

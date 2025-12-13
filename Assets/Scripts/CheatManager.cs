@@ -1,15 +1,13 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.InputSystem; // ¡Importante: Necesario para el nuevo sistema!
+using UnityEngine.InputSystem; 
 
 public class CheatManager : MonoBehaviour
 {
     void Update()
     {
-        // Verificamos que exista un teclado conectado para evitar errores
         if (Keyboard.current == null) return;
 
-        // En el nuevo sistema se comprueba si la tecla "fue presionada en este frame"
         if (Keyboard.current.digit1Key.wasPressedThisFrame) CargarNivel("Level1");
         if (Keyboard.current.digit2Key.wasPressedThisFrame) CargarNivel("Level2");
         if (Keyboard.current.digit3Key.wasPressedThisFrame) CargarNivel("Level3");
@@ -20,7 +18,7 @@ public class CheatManager : MonoBehaviour
         if (Keyboard.current.digit8Key.wasPressedThisFrame) CargarNivel("Level8");
         if (Keyboard.current.digit9Key.wasPressedThisFrame) CargarNivel("Level9");
 
-        // El 0 para el nivel 10
+
         if (Keyboard.current.digit0Key.wasPressedThisFrame) CargarNivel("Level10");
     }
 

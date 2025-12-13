@@ -4,7 +4,7 @@ using UnityEngine;
 public class BridgeTileV : MonoBehaviour
 {
     private bool hasBeenPressed = false;
-    private bool isCheckingInProgress = false; // Evita múltiples checks simultáneos
+    private bool isCheckingInProgress = false; 
     [SerializeField] private Transform cylinderTransform;
 
     private void OnTriggerEnter(Collider other)
@@ -39,7 +39,7 @@ public class BridgeTileV : MonoBehaviour
             Debug.Log("<color=yellow>[BridgeTileV] No estaba en vertical, no se activa.</color>");
         }
 
-        isCheckingInProgress = false; // Permitir nuevos intentos
+        isCheckingInProgress = false; 
     }
 
     private bool IsPlayerVertical(GameObject player)

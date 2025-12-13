@@ -22,7 +22,6 @@ public class BridgeTileH : MonoBehaviour
 
     private void OnTriggerEnter(Collider collision)
     {
-        // Verificar si el objeto que colisiona es el jugador y el tile no ha sido presionado
         if (collision.CompareTag("Player") && !hasBeenPressed)
         {
             PressedTile();
@@ -33,20 +32,17 @@ public class BridgeTileH : MonoBehaviour
     {
         hasBeenPressed = true;
 
-        // Desactivar el collider para que no se pueda presionar de nuevo
         if (boxCollider != null)
         {
             boxCollider.enabled = false;
         }
 
-        // Reducir la altura del cilindro en 0.1
         if (cylinder != null)
         {
             Vector3 newScale = cylinder.localScale;
             newScale.y -= 0.1f;
             cylinder.localScale = newScale;
 
-            // Ajustar la posición Y para que el cilindro descienda desde su base
             cylinder.localPosition = new Vector3(
                 cylinder.localPosition.x,
                 cylinder.localPosition.y - 0.05f,
@@ -54,7 +50,6 @@ public class BridgeTileH : MonoBehaviour
             );
         }
 
-        // Hacer visibles todos los tiles con tag GhostTileH
         GameObject[] ghostTiles = GameObject.FindGameObjectsWithTag("GhostTileH");
         Debug.Log("Tiles fantasma encontrados: " + ghostTiles.Length);
 
@@ -65,14 +60,12 @@ public class BridgeTileH : MonoBehaviour
 
         foreach (GameObject tile in ghostTiles)
         {
-            // Primero activar el gameObject si estaba desactivado
             if (!tile.activeSelf)
             {
                 tile.SetActive(true);
                 Debug.Log("Tile activado: " + tile.name);
             }
 
-            // Activar el MeshRenderer directamente
             MeshRenderer meshRenderer = tile.GetComponent<MeshRenderer>();
             if (meshRenderer != null)
             {
@@ -80,7 +73,6 @@ public class BridgeTileH : MonoBehaviour
                 Debug.Log("MeshRenderer activado en: " + tile.name);
             }
 
-            // También activar renderers en hijos por si acaso
             Renderer[] renderers = tile.GetComponentsInChildren<Renderer>();
             foreach (Renderer renderer in renderers)
             {
@@ -91,7 +83,6 @@ public class BridgeTileH : MonoBehaviour
         Debug.Log("Tile presionado: " + gameObject.name);
     }
 
-    // Opcional: resetear el tile manualmente
     public void ResetTile()
     {
         hasBeenPressed = false;
