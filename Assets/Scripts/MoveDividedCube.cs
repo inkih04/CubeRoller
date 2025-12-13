@@ -2,68 +2,100 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-
-
-
-
 public class MoveDividedCube : MonoBehaviour
 {
-    InputAction moveAction; 		
+    [Header("Estado")]
+    public bool isActive = false;
+    public MoveDividedCube otherHalf;
 
-    bool bMoving = false;           
-    bool bFalling = false;          
+    [Header("Configuración")]
+    public float rotSpeed = 300f;
+    public float fallSpeed = 10f;
 
-    public float rotSpeed; 			
-    public float fallSpeed; 		
+    [Header("Audio")]
+    public AudioClip[] sounds;
+    public AudioClip fallSound;
 
-    Vector3 rotPoint, rotAxis;      // Rotation movement is performed around the line formed by rotPoint and rotAxis
-    float rotRemainder; 			// The angle that the cube still has to rotate before the current movement is completed
-    float rotDir; 					
-    LayerMask layerMask; 			
+    [HideInInspector] public bool bMoving = false;
+    [HideInInspector] public bool bFalling = false;
 
-    public AudioClip[] sounds; 		// Sounds to play when the cube rotates
-    public AudioClip fallSound;     // Sound to play when the cube starts falling
+    private InputAction moveAction;
+    private LayerMask layerMask;
 
+    private Vector3 rotPoint, rotAxis;
+    private float rotRemainder;
+    private float rotDir;
 
-    // Determine if the cube is grounded by shooting a ray down from the cube location and 
-    // looking for hits with ground tiles
+    void Start()
+    {
+        // Configurar el input
+        moveAction = new InputAction("Move", binding: "<Gamepad>/leftStick");
+        moveAction.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d")
+            .With("Up", "<Keyboard>/upArrow")
+            .With("Down", "<Keyboard>/downArrow")
+            .With("Left", "<Keyboard>/leftArrow")
+            .With("Right", "<Keyboard>/rightArrow");
+        moveAction.Enable();
 
-    bool isGrounded()
+        // Configurar layer mask
+        layerMask = LayerMask.GetMask("Ground");
+    }
+
+    void OnDestroy()
+    {
+        if (moveAction != null)
+        {
+            moveAction.Disable();
+            moveAction.Dispose();
+        }
+    }
+
+    bool IsGrounded()
     {
         RaycastHit hit;
         if (Physics.Raycast(transform.position, Vector3.down, out hit, 1.0f, layerMask))
             return true;
-
         return false;
     }
 
-    // Start is called once after the MonoBehaviour is created
-    void Start()
-    {
-        // Find the move action by name. Done once in the Start method to avoid doing it every Update call.
-        moveAction = InputSystem.actions.FindAction("Move");
-
-        // Create the layer mask for ground tiles. Done once in the Start method to avoid doing it every Update call.
-        layerMask = LayerMask.GetMask("Ground");
-    }
-
-    // Update is called once per frame
     void Update()
     {
         if (bFalling)
         {
-            // If we have fallen, we just move down
+            // Caída
             transform.Translate(Vector3.down * fallSpeed * Time.deltaTime, Space.World);
+
+            // Respawn si cae muy bajo
+            if (transform.position.y < -5f)
+            {
+                GameObject spawnPoint = GameObject.FindGameObjectWithTag("Respawn");
+                if (spawnPoint != null)
+                {
+                    transform.position = spawnPoint.transform.position;
+                    transform.rotation = spawnPoint.transform.rotation;
+                    bFalling = false;
+                }
+            }
         }
         else if (bMoving)
         {
-            // If we are moving, we rotate around the line formed by rotPoint and rotAxis an angle depending on deltaTime
-            // If this angle is larger than the remainder, we stop the movement
+            // Rotación
             float amount = rotSpeed * Time.deltaTime;
             if (amount > rotRemainder)
             {
                 transform.RotateAround(rotPoint, rotAxis, rotRemainder * rotDir);
                 bMoving = false;
+
+                // Ajustar rotación
+                Vector3 euler = transform.eulerAngles;
+                euler.x = Mathf.Round(euler.x / 90) * 90;
+                euler.y = Mathf.Round(euler.y / 90) * 90;
+                euler.z = Mathf.Round(euler.z / 90) * 90;
+                transform.rotation = Quaternion.Euler(euler);
             }
             else
             {
@@ -71,59 +103,78 @@ public class MoveDividedCube : MonoBehaviour
                 rotRemainder -= amount;
             }
         }
-        else
+        else if (isActive) // Solo procesar input si esta mitad está activa
         {
-            // If we are not falling, nor moving, we check first if we should fall, then if we have to move
-            if (!isGrounded())
+            // Verificar si está en el suelo
+            if (!IsGrounded())
             {
                 bFalling = true;
-
-                // Play sound associated to falling
-                AudioSource.PlayClipAtPoint(fallSound, transform.position, 1.5f);
+                if (fallSound != null)
+                    AudioSource.PlayClipAtPoint(fallSound, transform.position, 1.5f);
             }
-
-            // Read the move action for input
-            Vector2 dir = moveAction.ReadValue<Vector2>();
-            if (Math.Abs(dir.x) > 0.99 || Math.Abs(dir.y) > 0.99)
+            else
             {
-                // If the absolute value of one of the axis is larger than 0.99, the player wants to move in a non diagonal direction
-                bMoving = true;
-
-                // We play a random movemnt sound
-                int iSound = UnityEngine.Random.Range(0, sounds.Length);
-                AudioSource.PlayClipAtPoint(sounds[iSound], transform.position, 1.0f);
-
-                // Set rotDir, rotRemainder, rotPoint, and rotAxis according to the movement the player wants to make
-                if (dir.x > 0.99)
+                // Leer input
+                Vector2 dir = moveAction.ReadValue<Vector2>();
+                if (Mathf.Abs(dir.x) > 0.5f || Mathf.Abs(dir.y) > 0.5f)
                 {
-                    rotDir = -1.0f;
-                    rotRemainder = 90.0f;
-                    rotAxis = new Vector3(0.0f, 0.0f, 1.0f);
-                    rotPoint = transform.position + new Vector3(0.5f, -0.5f, 0.0f);
-                }
-                else if (dir.x < -0.99)
-                {
-                    rotDir = 1.0f;
-                    rotRemainder = 90.0f;
-                    rotAxis = new Vector3(0.0f, 0.0f, 1.0f);
-                    rotPoint = transform.position + new Vector3(-0.5f, -0.5f, 0.0f);
-                }
-                else if (dir.y > 0.99)
-                {
-                    rotDir = 1.0f;
-                    rotRemainder = 90.0f;
-                    rotAxis = new Vector3(1.0f, 0.0f, 0.0f);
-                    rotPoint = transform.position + new Vector3(0.0f, -0.5f, 0.5f);
-                }
-                else if (dir.y < -0.99)
-                {
-                    rotDir = -1.0f;
-                    rotRemainder = 90.0f;
-                    rotAxis = new Vector3(1.0f, 0.0f, 0.0f);
-                    rotPoint = transform.position + new Vector3(0.0f, -0.5f, -0.5f);
+                    HandleMovement(dir);
                 }
             }
         }
     }
 
+    void HandleMovement(Vector2 dir)
+    {
+        bMoving = true;
+
+        // Reproducir sonido
+        if (sounds != null && sounds.Length > 0)
+        {
+            int iSound = UnityEngine.Random.Range(0, sounds.Length);
+            AudioSource.PlayClipAtPoint(sounds[iSound], transform.position, 1.0f);
+        }
+
+        // Determinar dirección de movimiento
+        Vector3 moveDir = Vector3.zero;
+        if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+        {
+            moveDir = dir.x > 0 ? Vector3.right : Vector3.left;
+        }
+        else
+        {
+            moveDir = dir.y > 0 ? Vector3.forward : Vector3.back;
+        }
+
+        // Calcular pivote de rotación
+        CalculatePivot(moveDir);
+    }
+
+    void CalculatePivot(Vector3 direction)
+    {
+        BoxCollider box = GetComponent<BoxCollider>();
+        if (box == null) return;
+
+        float distToBottom = box.bounds.extents.y;
+        float distToEdge = 0f;
+
+        if (Mathf.Abs(direction.x) > 0)
+            distToEdge = box.bounds.extents.x;
+        else
+            distToEdge = box.bounds.extents.z;
+
+        rotPoint = transform.position + (direction * distToEdge) + (Vector3.down * distToBottom);
+        rotAxis = Vector3.Cross(Vector3.up, direction);
+        rotDir = 1f;
+        rotRemainder = 90f;
+    }
+
+    void OnDrawGizmos()
+    {
+        if (bMoving && rotPoint != Vector3.zero)
+        {
+            Gizmos.color = isActive ? Color.green : Color.yellow;
+            Gizmos.DrawSphere(rotPoint, 0.08f);
+        }
+    }
 }
