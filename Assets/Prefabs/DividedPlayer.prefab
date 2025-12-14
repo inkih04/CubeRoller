@@ -157,8 +157,12 @@ MonoBehaviour:
   otherHalf: {fileID: 0}
   rotSpeed: 300
   fallSpeed: 10
-  sounds: []
-  fallSound: {fileID: 0}
+  inputCooldown: 0.1
+  sounds:
+  - {fileID: 8300000, guid: ea4de65d055d11f45a6a6d62a934c6ee, type: 3}
+  - {fileID: 8300000, guid: 41f7d7f4aafd4e94baa218ca6d9ae943, type: 3}
+  - {fileID: 8300000, guid: 9b04fb675444ad94cbdbf035f4b6e36b, type: 3}
+  fallSound: {fileID: 8300000, guid: c0c7595d5cbe6634096ff199a183f891, type: 3}
   bMoving: 0
   bFalling: 0
 --- !u!1001 &3356578459939215640

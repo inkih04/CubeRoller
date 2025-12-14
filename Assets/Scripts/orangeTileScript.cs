@@ -9,6 +9,10 @@ public class OrangeTileScript : MonoBehaviour
     [SerializeField] private float fallSpeed = 5f;
     [SerializeField] private float destroyAfterSeconds = 3f;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip buttonSound;
+    [SerializeField][Range(0f, 1f)] private float soundVolume = 1f;
+
     private bool isPlayerOn = false;
     private bool hasFallen = false;
     private Rigidbody parentRb;
@@ -86,6 +90,11 @@ public class OrangeTileScript : MonoBehaviour
 
     private void MakeTileFall()
     {
+        if (buttonSound != null)
+        {
+            AudioSource.PlayClipAtPoint(buttonSound, transform.position, soundVolume);
+        }
+
         hasFallen = true;
 
 

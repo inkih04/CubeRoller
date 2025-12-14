@@ -26,6 +26,7 @@ public class CheatManager : MonoBehaviour
     {
         if (Application.CanStreamedLevelBeLoaded(nombreEscena))
         {
+            Time.timeScale = 1f;
             SceneManager.LoadScene(nombreEscena);
         }
         else

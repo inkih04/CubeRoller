@@ -8,6 +8,10 @@ public class BridgeTileH : MonoBehaviour
     private float originalCylinderHeight;
     private BoxCollider boxCollider;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip buttonSound;
+    [SerializeField][Range(0f, 1f)] private float soundVolume = 1f;
+
     private void Start()
     {
         if (cylinder == null)
@@ -31,6 +35,11 @@ public class BridgeTileH : MonoBehaviour
     private void PressedTile()
     {
         hasBeenPressed = true;
+
+        if (buttonSound != null)
+        {
+            AudioSource.PlayClipAtPoint(buttonSound, transform.position, soundVolume);
+        }
 
         if (boxCollider != null)
         {

@@ -6281,6 +6281,10 @@ PrefabInstance:
       propertyPath: cylinder
       value: 
       objectReference: {fileID: 2006725732}
+    - target: {fileID: 3925294055543250457, guid: 5eb35914c9d3ce14d8131344e3ed9457, type: 3}
+      propertyPath: buttonSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 3fdfb50e900455d449d5dfbb9ab3a9c9, type: 3}
     - target: {fileID: 5905281330473358404, guid: 5eb35914c9d3ce14d8131344e3ed9457, type: 3}
       propertyPath: m_Name
       value: BridgeTileH
@@ -7636,6 +7640,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5640224119757186923, guid: d2a082ebb7c85574c98d923f7c722ebd, type: 3}
+      propertyPath: buttonSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 3fdfb50e900455d449d5dfbb9ab3a9c9, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -7660,11 +7668,11 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 8898a0dcdff45594ea5a9222008f19a1, type: 3}
+  m_Resource: {fileID: 8300000, guid: 45a1137327c95ea4eb9bf69021faf657, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.1
+  m_Volume: 0.077
   m_Pitch: 1
-  Loop: 0
+  Loop: 1
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0

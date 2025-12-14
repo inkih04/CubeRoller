@@ -11,6 +11,7 @@ public class MoveDividedCube : MonoBehaviour
     public float fallSpeed = 10f;
     public float inputCooldown = 0.1f;
 
+    [Header("Referencias")]
     public AudioClip[] sounds;
     public AudioClip fallSound;
 
