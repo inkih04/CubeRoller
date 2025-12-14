@@ -36,6 +36,29 @@ public class DivisionManager : MonoBehaviour
             Destroy(gameObject);
     }
 
+    public void ResetDivision()
+    {
+        // Limpiar las mitades si existen
+        if (halfA != null)
+        {
+            Destroy(halfA);
+            halfA = null;
+        }
+
+        if (halfB != null)
+        {
+            Destroy(halfB);
+            halfB = null;
+        }
+
+        scriptA = null;
+        scriptB = null;
+        isDivided = false;
+        activeHalf = 0;
+
+        Debug.Log("[DivisionManager] Estado reseteado");
+    }
+
     void Start()
     {
         // Configurar la acción de cambio (tecla Espacio)
@@ -53,14 +76,21 @@ public class DivisionManager : MonoBehaviour
         }
     }
 
-    public void DividePlayer(Vector3 divisionPoint, bool isHorizontalSplit)
+    public void DividePlayer(Vector3 divisionPoint, bool isHorizontalSplit, float separationDistance = 0.5f)
     {
         if (isDivided || mainPlayer == null) return;
 
-        StartCoroutine(DividePlayerCoroutine(divisionPoint, isHorizontalSplit));
+        StartCoroutine(DividePlayerCoroutine(divisionPoint, isHorizontalSplit, separationDistance));
     }
 
-    IEnumerator DividePlayerCoroutine(Vector3 divisionPoint, bool isHorizontalSplit)
+    public void DividePlayerAtPositions(Vector3 posA, Vector3 posB, Quaternion rotation)
+    {
+        if (isDivided || mainPlayer == null) return;
+
+        StartCoroutine(DividePlayerAtPositionsCoroutine(posA, posB, rotation));
+    }
+
+    IEnumerator DividePlayerCoroutine(Vector3 divisionPoint, bool isHorizontalSplit, float separationDistance)
     {
         isDivided = true;
 
@@ -72,12 +102,29 @@ public class DivisionManager : MonoBehaviour
         Vector3 offsetDirection = isHorizontalSplit ?
             mainPlayer.transform.right : mainPlayer.transform.forward;
 
-        Vector3 posA = divisionPoint + offsetDirection * 0.5f;
-        Vector3 posB = divisionPoint - offsetDirection * 0.5f;
+        Vector3 posA = divisionPoint + offsetDirection * separationDistance;
+        Vector3 posB = divisionPoint - offsetDirection * separationDistance;
 
+        yield return StartCoroutine(CreateHalves(posA, posB, mainPlayer.transform.rotation));
+    }
+
+    IEnumerator DividePlayerAtPositionsCoroutine(Vector3 posA, Vector3 posB, Quaternion rotation)
+    {
+        isDivided = true;
+
+        // Desactivar el jugador principal
+        mainPlayer.SetPlayerControl(false);
+        mainPlayer.HidePlayer();
+
+        yield return StartCoroutine(CreateHalves(posA, posB, rotation));
+    }
+
+
+    IEnumerator CreateHalves(Vector3 posA, Vector3 posB, Quaternion rotation)
+    {
         // Crear las mitades
-        halfA = Instantiate(halfCubePrefab, posA, mainPlayer.transform.rotation);
-        halfB = Instantiate(halfCubePrefab, posB, mainPlayer.transform.rotation);
+        halfA = Instantiate(halfCubePrefab, posA, rotation);
+        halfB = Instantiate(halfCubePrefab, posB, rotation);
 
         scriptA = halfA.GetComponent<MoveDividedCube>();
         scriptB = halfB.GetComponent<MoveDividedCube>();
@@ -167,32 +214,46 @@ public class DivisionManager : MonoBehaviour
     {
         if (!isDivided) return;
 
-        // Calcular punto medio
         Vector3 midPoint = (halfA.transform.position + halfB.transform.position) / 2f;
+        midPoint.y += 0.5f;
 
-        // Determinar rotación (usar la de la mitad activa)
-        Quaternion rotation = activeHalf == 0 ?
-            halfA.transform.rotation : halfB.transform.rotation;
+        // Calcular la orientación basada en la posición de las mitades
+        Vector3 offset = halfA.transform.position - halfB.transform.position;
+        offset.y = 0; // Ignorar diferencia en Y
 
-        // Reactivar el jugador principal
+        Quaternion targetRotation;
+
+        // Determinar si están alineados en X o Z
+        if (Mathf.Abs(offset.x) > Mathf.Abs(offset.z))
+        {
+            // Alineados en el eje X
+            targetRotation = Quaternion.Euler(0, 90, 0);
+            Debug.Log("Mitades alineadas en eje X - rotación 90°");
+        }
+        else
+        {
+            // Alineados en el eje Z
+            targetRotation = Quaternion.Euler(0, 0, 0);
+            Debug.Log("Mitades alineadas en eje Z - rotación 0°");
+        }
+
         mainPlayer.transform.position = midPoint;
-        mainPlayer.transform.rotation = rotation;
+        mainPlayer.transform.rotation = targetRotation;
 
-        // Hacer visible el jugador principal
         Renderer[] renderers = mainPlayer.GetComponentsInChildren<Renderer>(true);
         foreach (Renderer r in renderers)
             r.enabled = true;
 
         mainPlayer.SetPlayerControl(true);
 
-        // Destruir las mitades
         Destroy(halfA);
         Destroy(halfB);
 
         isDivided = false;
 
-        Debug.Log("¡Mitades unidas!");
+        Debug.Log($"¡Mitades unidas! Posición: {midPoint}, Rotación: {targetRotation.eulerAngles}");
     }
+
 
     public bool IsDivided()
     {

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class MoveDividedCube : MonoBehaviour
 {
@@ -64,22 +65,17 @@ public class MoveDividedCube : MonoBehaviour
 
     void Update()
     {
+        // Verificar si se cayó del mapa
+        if (transform.position.y < -5f)
+        {
+            HandleFallOffMap();
+            return;
+        }
+
         if (bFalling)
         {
             // Caída
             transform.Translate(Vector3.down * fallSpeed * Time.deltaTime, Space.World);
-
-            // Respawn si cae muy bajo
-            if (transform.position.y < -5f)
-            {
-                GameObject spawnPoint = GameObject.FindGameObjectWithTag("Respawn");
-                if (spawnPoint != null)
-                {
-                    transform.position = spawnPoint.transform.position;
-                    transform.rotation = spawnPoint.transform.rotation;
-                    bFalling = false;
-                }
-            }
         }
         else if (bMoving)
         {
@@ -121,6 +117,36 @@ public class MoveDividedCube : MonoBehaviour
                     HandleMovement(dir);
                 }
             }
+        }
+    }
+
+    void HandleFallOffMap()
+    {
+        Debug.Log("¡Una mitad se cayó del mapa! Reiniciando nivel...");
+
+        // Resetear el DivisionManager antes de reiniciar
+        if (DivisionManager.Instance != null)
+        {
+            DivisionManager.Instance.ResetDivision();
+        }
+
+        // Ocultar el jugador principal si existe
+        if (MoveCube.Instance != null)
+        {
+            MoveCube.Instance.HidePlayer();
+            MoveCube.Instance.enabled = false;
+        }
+
+        // Intentar usar el LevelSequenceManager si existe
+        LevelSequenceManager manager = FindObjectOfType<LevelSequenceManager>();
+        if (manager != null)
+        {
+            manager.RestartLevel();
+        }
+        else
+        {
+            // Si no hay manager, reiniciar la escena directamente
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
     }
 

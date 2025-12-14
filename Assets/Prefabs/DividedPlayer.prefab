@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6049009374304284358}
   - component: {fileID: 4287917593485158052}
   - component: {fileID: -4838483221550101501}
+  - component: {fileID: 4598577031425283579}
   m_Layer: 0
   m_Name: DividedPlayer
   m_TagString: Untagged
@@ -140,6 +141,26 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &4598577031425283579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2266319578770106200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2386bfc9389f5a1438eb703461c53e0e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MoveDividedCube
+  isActive: 0
+  otherHalf: {fileID: 0}
+  rotSpeed: 300
+  fallSpeed: 10
+  sounds: []
+  fallSound: {fileID: 0}
+  bMoving: 0
+  bFalling: 0
 --- !u!1001 &3356578459939215640
 PrefabInstance:
   m_ObjectHideFlags: 0
