@@ -11,8 +11,11 @@ public class DivisionManager : MonoBehaviour
 
     [Header("Referencias")]
     public MoveCube mainPlayer;
-    public Material normalMaterial;
-    public Material selectedMaterial; // Material con brillo verde
+    public Material selectedMaterial; // Material con brillo verde (OBLIGATORIO)
+
+    [Header("Materiales Originales (Auto)")]
+    private Material[] originalMaterialsA; // Array de materiales originales de A
+    private Material[] originalMaterialsB; // Array de materiales originales de B
 
     [Header("Configuración")]
     public float divisionDuration = 0.5f;
@@ -61,6 +64,10 @@ public class DivisionManager : MonoBehaviour
         scriptB = null;
         isDivided = false;
         activeHalf = 0;
+        
+        // Limpiar arrays de materiales guardados
+        originalMaterialsA = null;
+        originalMaterialsB = null;
 
         // Asegurarse de que mainPlayer esté disponible
         if (mainPlayer == null)
@@ -87,6 +94,20 @@ public class DivisionManager : MonoBehaviour
         switchAction = new InputAction("Switch", binding: "<Keyboard>/space");
         switchAction.performed += ctx => SwitchActiveHalf();
         switchAction.Enable();
+
+        // VERIFICAR MATERIALES AL INICIO
+        if (showDebugLogs)
+        {
+            Debug.Log("<color=cyan>===== VERIFICACIÓN DE MATERIALES AL INICIO =====</color>");
+            
+            Debug.Log($"[DivisionManager] selectedMaterial asignado: {selectedMaterial != null}");
+            if (selectedMaterial != null)
+                Debug.Log($"[DivisionManager] selectedMaterial nombre: {selectedMaterial.name}");
+            else
+                Debug.LogError("<color=red>[DivisionManager] ¡FALTA ASIGNAR selectedMaterial (verde) EN EL INSPECTOR!</color>");
+            
+            Debug.Log("<color=cyan>================================================</color>");
+        }
 
         if (showDebugLogs)
             Debug.Log("[DivisionManager] Inicializado correctamente");
@@ -222,7 +243,42 @@ public class DivisionManager : MonoBehaviour
         if (showDebugLogs)
             Debug.Log("[DivisionManager] Scripts configurados correctamente");
 
+        // GUARDAR LOS MATERIALES ORIGINALES DE TODOS LOS RENDERERS
+        Renderer[] renderersA = halfA.GetComponentsInChildren<Renderer>();
+        Renderer[] renderersB = halfB.GetComponentsInChildren<Renderer>();
+
+        if (renderersA != null && renderersA.Length > 0)
+        {
+            originalMaterialsA = new Material[renderersA.Length];
+            for (int i = 0; i < renderersA.Length; i++)
+            {
+                if (renderersA[i] != null && renderersA[i].material != null)
+                {
+                    originalMaterialsA[i] = renderersA[i].material;
+                    if (showDebugLogs)
+                        Debug.Log($"<color=lime>[DivisionManager] ? Material original {i} de Mitad A guardado: {originalMaterialsA[i].name} (de {renderersA[i].gameObject.name})</color>");
+                }
+            }
+        }
+
+        if (renderersB != null && renderersB.Length > 0)
+        {
+            originalMaterialsB = new Material[renderersB.Length];
+            for (int i = 0; i < renderersB.Length; i++)
+            {
+                if (renderersB[i] != null && renderersB[i].material != null)
+                {
+                    originalMaterialsB[i] = renderersB[i].material;
+                    if (showDebugLogs)
+                        Debug.Log($"<color=lime>[DivisionManager] ? Material original {i} de Mitad B guardado: {originalMaterialsB[i].name} (de {renderersB[i].gameObject.name})</color>");
+                }
+            }
+        }
+
         // Aplicar materiales
+        if (showDebugLogs)
+            Debug.Log("<color=yellow>[DivisionManager] Llamando a UpdateVisuals() por primera vez...</color>");
+        
         UpdateVisuals();
 
         yield return new WaitForSeconds(0.1f);
@@ -235,32 +291,253 @@ public class DivisionManager : MonoBehaviour
 
     void SwitchActiveHalf()
     {
-        if (!isDivided) return;
+        if (!isDivided)
+        {
+            if (showDebugLogs)
+                Debug.Log("<color=yellow>[DivisionManager] SwitchActiveHalf ignorado - no está dividido</color>");
+            return;
+        }
 
+        if (showDebugLogs)
+            Debug.Log($"<color=cyan>===== CAMBIANDO MITAD ACTIVA =====</color>");
+        
+        int oldActiveHalf = activeHalf;
         activeHalf = 1 - activeHalf;
+
+        if (showDebugLogs)
+            Debug.Log($"[DivisionManager] activeHalf cambió de {oldActiveHalf} a {activeHalf}");
 
         scriptA.isActive = (activeHalf == 0);
         scriptB.isActive = (activeHalf == 1);
 
+        if (showDebugLogs)
+        {
+            Debug.Log($"[DivisionManager] scriptA.isActive = {scriptA.isActive}");
+            Debug.Log($"[DivisionManager] scriptB.isActive = {scriptB.isActive}");
+        }
+
         UpdateVisuals();
 
         if (showDebugLogs)
-            Debug.Log($"[DivisionManager] Cambiado a mitad {(activeHalf == 0 ? "A" : "B")}");
+            Debug.Log($"<color=green>[DivisionManager] ? Cambiado a mitad {(activeHalf == 0 ? "A" : "B")}</color>");
     }
 
     void UpdateVisuals()
     {
-        if (halfA != null && halfB != null && selectedMaterial != null && normalMaterial != null)
+        if (showDebugLogs)
+            Debug.Log("<color=yellow>========== UPDATE VISUALS LLAMADO ==========</color>");
+
+        // VERIFICACIONES PASO A PASO
+        if (halfA == null)
         {
-            Renderer rendA = halfA.GetComponent<Renderer>();
-            Renderer rendB = halfB.GetComponent<Renderer>();
-
-            if (rendA != null)
-                rendA.material = scriptA.isActive ? selectedMaterial : normalMaterial;
-
-            if (rendB != null)
-                rendB.material = scriptB.isActive ? selectedMaterial : normalMaterial;
+            Debug.LogError("<color=red>[UpdateVisuals] ? halfA es NULL!</color>");
+            return;
         }
+        if (showDebugLogs)
+            Debug.Log($"[UpdateVisuals] ? halfA válido: {halfA.name}");
+
+        if (halfB == null)
+        {
+            Debug.LogError("<color=red>[UpdateVisuals] ? halfB es NULL!</color>");
+            return;
+        }
+        if (showDebugLogs)
+            Debug.Log($"[UpdateVisuals] ? halfB válido: {halfB.name}");
+
+        if (selectedMaterial == null)
+        {
+            Debug.LogError("<color=red>[UpdateVisuals] ? selectedMaterial es NULL! Asigna el material verde en el Inspector</color>");
+            return;
+        }
+        if (showDebugLogs)
+        {
+            Debug.Log($"[UpdateVisuals] ? selectedMaterial válido: {selectedMaterial.name}");
+            
+            // INSPECCIONAR PROPIEDADES DEL MATERIAL VERDE
+            Debug.Log($"<color=lime>===== INSPECCIONANDO MATERIAL VERDE =====</color>");
+            Debug.Log($"[UpdateVisuals] Shader: {selectedMaterial.shader.name}");
+            
+            if (selectedMaterial.HasProperty("_Color"))
+            {
+                Color color = selectedMaterial.GetColor("_Color");
+                Debug.Log($"[UpdateVisuals] Color principal: R={color.r:F2}, G={color.g:F2}, B={color.b:F2}, A={color.a:F2}");
+            }
+            
+            if (selectedMaterial.HasProperty("_EmissionColor"))
+            {
+                Color emissionColor = selectedMaterial.GetColor("_EmissionColor");
+                Debug.Log($"[UpdateVisuals] Color emisión: R={emissionColor.r:F2}, G={emissionColor.g:F2}, B={emissionColor.b:F2}, intensidad={emissionColor.maxColorComponent:F2}");
+                
+                if (emissionColor.maxColorComponent > 0.01f)
+                    Debug.Log($"<color=lime>[UpdateVisuals] ? Material TIENE emisión activa</color>");
+                else
+                    Debug.LogWarning($"<color=orange>[UpdateVisuals] ? Material NO tiene emisión activa (muy baja o 0)</color>");
+            }
+            else
+            {
+                Debug.LogWarning($"<color=orange>[UpdateVisuals] ? Material no tiene propiedad _EmissionColor</color>");
+            }
+            
+            Debug.Log($"<color=lime>==========================================</color>");
+        }
+
+        // Verificar materiales originales
+        if (originalMaterialsA == null || originalMaterialsA.Length == 0)
+        {
+            Debug.LogWarning("<color=orange>[UpdateVisuals] ? originalMaterialsA es NULL o vacío!</color>");
+        }
+        else if (showDebugLogs)
+        {
+            Debug.Log($"[UpdateVisuals] ? originalMaterialsA tiene {originalMaterialsA.Length} materiales guardados");
+            
+            // COMPARAR PRIMER MATERIAL ORIGINAL CON MATERIAL VERDE
+            if (originalMaterialsA.Length > 0 && originalMaterialsA[0] != null)
+            {
+                Debug.Log($"<color=cyan>===== COMPARANDO MATERIALES =====</color>");
+                
+                if (originalMaterialsA[0].HasProperty("_Color") && selectedMaterial.HasProperty("_Color"))
+                {
+                    Color colorOriginal = originalMaterialsA[0].GetColor("_Color");
+                    Color colorVerde = selectedMaterial.GetColor("_Color");
+                    
+                    Debug.Log($"[Comparación] Color ORIGINAL: R={colorOriginal.r:F2}, G={colorOriginal.g:F2}, B={colorOriginal.b:F2}");
+                    Debug.Log($"[Comparación] Color VERDE: R={colorVerde.r:F2}, G={colorVerde.g:F2}, B={colorVerde.b:F2}");
+                    
+                    if (Vector3.Distance(new Vector3(colorOriginal.r, colorOriginal.g, colorOriginal.b), 
+                                         new Vector3(colorVerde.r, colorVerde.g, colorVerde.b)) < 0.1f)
+                    {
+                        Debug.LogWarning("<color=red>[Comparación] ??? LOS COLORES SON MUY SIMILARES! Por eso no se nota la diferencia visual ???</color>");
+                    }
+                    else
+                    {
+                        Debug.Log("<color=lime>[Comparación] ? Los colores son diferentes</color>");
+                    }
+                }
+                
+                Debug.Log($"<color=cyan>=================================</color>");
+            }
+        }
+        
+        if (originalMaterialsB == null || originalMaterialsB.Length == 0)
+        {
+            Debug.LogWarning("<color=orange>[UpdateVisuals] ? originalMaterialsB es NULL o vacío!</color>");
+        }
+
+        // VERIFICAR SI HAY MÚLTIPLES RENDERERS
+        Renderer[] allRenderersA = halfA.GetComponentsInChildren<Renderer>();
+        Renderer[] allRenderersB = halfB.GetComponentsInChildren<Renderer>();
+        
+        if (showDebugLogs)
+        {
+            Debug.Log($"<color=cyan>[UpdateVisuals] Mitad A tiene {allRenderersA.Length} renderer(s)</color>");
+            for (int i = 0; i < allRenderersA.Length; i++)
+            {
+                Debug.Log($"[UpdateVisuals] - Renderer A[{i}]: {allRenderersA[i].gameObject.name} (Material actual: {allRenderersA[i].material.name})");
+            }
+            
+            Debug.Log($"<color=cyan>[UpdateVisuals] Mitad B tiene {allRenderersB.Length} renderer(s)</color>");
+            for (int i = 0; i < allRenderersB.Length; i++)
+            {
+                Debug.Log($"[UpdateVisuals] - Renderer B[{i}]: {allRenderersB[i].gameObject.name} (Material actual: {allRenderersB[i].material.name})");
+            }
+        }
+
+        if (allRenderersA == null || allRenderersA.Length == 0)
+        {
+            Debug.LogError("<color=red>[UpdateVisuals] ? No se encontraron Renderers en halfA!</color>");
+            return;
+        }
+
+        if (allRenderersB == null || allRenderersB.Length == 0)
+        {
+            Debug.LogError("<color=red>[UpdateVisuals] ? No se encontraron Renderers en halfB!</color>");
+            return;
+        }
+
+        if (showDebugLogs)
+        {
+            Debug.Log($"[UpdateVisuals] ? Estado actual - scriptA.isActive: {scriptA.isActive}, scriptB.isActive: {scriptB.isActive}");
+        }
+
+        // APLICAR MATERIALES A TODOS LOS RENDERERS
+        if (allRenderersA != null && allRenderersA.Length > 0)
+        {
+            if (showDebugLogs)
+                Debug.Log($"<color=yellow>[UpdateVisuals] Aplicando materiales a MITAD A ({(scriptA.isActive ? "ACTIVA - verde" : "INACTIVA - originales")})</color>");
+            
+            for (int i = 0; i < allRenderersA.Length; i++)
+            {
+                if (allRenderersA[i] != null)
+                {
+                    Material materialToApply;
+                    
+                    if (scriptA.isActive)
+                    {
+                        // Si está activa, usar el material verde
+                        materialToApply = selectedMaterial;
+                    }
+                    else
+                    {
+                        // Si está inactiva, usar el material original de ESTE renderer específico
+                        if (originalMaterialsA != null && i < originalMaterialsA.Length && originalMaterialsA[i] != null)
+                        {
+                            materialToApply = originalMaterialsA[i];
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"<color=orange>[UpdateVisuals] ? No hay material original guardado para renderer A[{i}], saltando...</color>");
+                            continue;
+                        }
+                    }
+                    
+                    allRenderersA[i].material = materialToApply;
+                    
+                    if (showDebugLogs)
+                        Debug.Log($"[UpdateVisuals] ? Material aplicado a A[{i}] ({allRenderersA[i].gameObject.name}): {materialToApply.name}");
+                }
+            }
+        }
+
+        if (allRenderersB != null && allRenderersB.Length > 0)
+        {
+            if (showDebugLogs)
+                Debug.Log($"<color=yellow>[UpdateVisuals] Aplicando materiales a MITAD B ({(scriptB.isActive ? "ACTIVA - verde" : "INACTIVA - originales")})</color>");
+            
+            for (int i = 0; i < allRenderersB.Length; i++)
+            {
+                if (allRenderersB[i] != null)
+                {
+                    Material materialToApply;
+                    
+                    if (scriptB.isActive)
+                    {
+                        // Si está activa, usar el material verde
+                        materialToApply = selectedMaterial;
+                    }
+                    else
+                    {
+                        // Si está inactiva, usar el material original de ESTE renderer específico
+                        if (originalMaterialsB != null && i < originalMaterialsB.Length && originalMaterialsB[i] != null)
+                        {
+                            materialToApply = originalMaterialsB[i];
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"<color=orange>[UpdateVisuals] ? No hay material original guardado para renderer B[{i}], saltando...</color>");
+                            continue;
+                        }
+                    }
+                    
+                    allRenderersB[i].material = materialToApply;
+                    
+                    if (showDebugLogs)
+                        Debug.Log($"[UpdateVisuals] ? Material aplicado a B[{i}] ({allRenderersB[i].gameObject.name}): {materialToApply.name}");
+                }
+            }
+        }
+
+        if (showDebugLogs)
+            Debug.Log("<color=green>[UpdateVisuals] ========== UPDATE VISUALS COMPLETADO ==========</color>");
     }
 
     void Update()
