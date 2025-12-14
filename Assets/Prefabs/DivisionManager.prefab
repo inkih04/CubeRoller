@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5970184254356259288
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4730826563130619986}
+  - component: {fileID: 3849497713235163506}
+  m_Layer: 0
+  m_Name: DivisionManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4730826563130619986
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5970184254356259288}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 12.04321, y: -94.10108, z: 26.12836}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3849497713235163506
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5970184254356259288}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb20d57599bd3de4dba0be428d87a3e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DivisionManager
+  halfCubePrefab: {fileID: 2266319578770106200, guid: bac4271653759bd4bbba310ce0815050, type: 3}
+  mainPlayer: {fileID: 0}
+  normalMaterial: {fileID: 0}
+  selectedMaterial: {fileID: 2100000, guid: 717a1b0fc07c4b746a2a628f51336972, type: 2}
+  divisionDuration: 0.5
+  mergeDistance: 1.1
+  showDebugLogs: 1
