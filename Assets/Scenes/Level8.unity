@@ -265,6 +265,7 @@ MonoBehaviour:
   selectedMaterial: {fileID: 2100000, guid: 717a1b0fc07c4b746a2a628f51336972, type: 2}
   divisionDuration: 0.5
   mergeDistance: 1.1
+  showDebugLogs: 1
 --- !u!4 &59586613
 Transform:
   m_ObjectHideFlags: 0
@@ -4214,11 +4215,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5003318762340934573, guid: f1a015ed9d57f724c8db43a4132c0f6e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 24.406998
+      value: 24.431
       objectReference: {fileID: 0}
     - target: {fileID: 5003318762340934573, guid: f1a015ed9d57f724c8db43a4132c0f6e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 31.65148
+      value: 31.603
       objectReference: {fileID: 0}
     - target: {fileID: 5003318762340934573, guid: f1a015ed9d57f724c8db43a4132c0f6e, type: 3}
       propertyPath: m_LocalPosition.z

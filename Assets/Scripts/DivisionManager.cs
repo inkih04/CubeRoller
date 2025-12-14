@@ -18,6 +18,9 @@ public class DivisionManager : MonoBehaviour
     public float divisionDuration = 0.5f;
     public float mergeDistance = 1.1f; // Distancia para considerar juntar las mitades
 
+    [Header("Debug")]
+    public bool showDebugLogs = true;
+
     private GameObject halfA;
     private GameObject halfB;
     private MoveDividedCube scriptA;
@@ -38,6 +41,9 @@ public class DivisionManager : MonoBehaviour
 
     public void ResetDivision()
     {
+        if (showDebugLogs)
+            Debug.Log($"<color=yellow>[DivisionManager] ResetDivision llamado. Antes - isDivided={isDivided}, halfA={halfA != null}, halfB={halfB != null}</color>");
+
         // Limpiar las mitades si existen
         if (halfA != null)
         {
@@ -56,7 +62,23 @@ public class DivisionManager : MonoBehaviour
         isDivided = false;
         activeHalf = 0;
 
-        Debug.Log("[DivisionManager] Estado reseteado");
+        // Asegurarse de que mainPlayer esté disponible
+        if (mainPlayer == null)
+        {
+            mainPlayer = FindObjectOfType<MoveCube>();
+            if (mainPlayer != null)
+            {
+                if (showDebugLogs)
+                    Debug.Log("<color=green>[DivisionManager] mainPlayer re-asignado automáticamente</color>");
+            }
+            else
+            {
+                Debug.LogWarning("[DivisionManager] No se pudo encontrar MoveCube en la escena");
+            }
+        }
+
+        if (showDebugLogs)
+            Debug.Log($"<color=green>[DivisionManager] Estado reseteado. Después - isDivided={isDivided}, mainPlayer válido={mainPlayer != null}</color>");
     }
 
     void Start()
@@ -65,6 +87,9 @@ public class DivisionManager : MonoBehaviour
         switchAction = new InputAction("Switch", binding: "<Keyboard>/space");
         switchAction.performed += ctx => SwitchActiveHalf();
         switchAction.Enable();
+
+        if (showDebugLogs)
+            Debug.Log("[DivisionManager] Inicializado correctamente");
     }
 
     void OnDestroy()
@@ -78,21 +103,65 @@ public class DivisionManager : MonoBehaviour
 
     public void DividePlayer(Vector3 divisionPoint, bool isHorizontalSplit, float separationDistance = 0.5f)
     {
-        if (isDivided || mainPlayer == null) return;
+        if (isDivided)
+        {
+            Debug.LogWarning("[DivisionManager] No se puede dividir: ya está dividido");
+            return;
+        }
+
+        if (mainPlayer == null)
+        {
+            Debug.LogError("[DivisionManager] No se puede dividir: mainPlayer es null");
+            return;
+        }
+
+        if (showDebugLogs)
+            Debug.Log($"<color=cyan>[DivisionManager] Dividiendo jugador en punto {divisionPoint}</color>");
 
         StartCoroutine(DividePlayerCoroutine(divisionPoint, isHorizontalSplit, separationDistance));
     }
 
     public void DividePlayerAtPositions(Vector3 posA, Vector3 posB, Quaternion rotation)
     {
-        if (isDivided || mainPlayer == null) return;
+        if (showDebugLogs)
+            Debug.Log($"<color=magenta>[DivisionManager] ===== DividePlayerAtPositions LLAMADO ===== posA={posA}, posB={posB}</color>");
+
+        if (isDivided)
+        {
+            Debug.LogWarning($"<color=red>[DivisionManager] ? NO SE PUEDE DIVIDIR: Ya está dividido (isDivided={isDivided})</color>");
+            return;
+        }
+
+        if (showDebugLogs)
+            Debug.Log($"[DivisionManager] ? isDivided check passed (isDivided={isDivided})");
+
+        if (mainPlayer == null)
+        {
+            Debug.LogError("<color=red>[DivisionManager] ? NO SE PUEDE DIVIDIR: mainPlayer es null - intentando encontrarlo...</color>");
+            mainPlayer = FindObjectOfType<MoveCube>();
+            if (mainPlayer == null)
+            {
+                Debug.LogError("<color=red>[DivisionManager] ? No se pudo encontrar MoveCube en la escena!</color>");
+                return;
+            }
+            Debug.Log("<color=green>[DivisionManager] ? MoveCube encontrado y asignado!</color>");
+        }
+
+        if (showDebugLogs)
+            Debug.Log($"<color=cyan>[DivisionManager] ? Todas las verificaciones pasadas. Iniciando coroutine...</color>");
 
         StartCoroutine(DividePlayerAtPositionsCoroutine(posA, posB, rotation));
+
+        if (showDebugLogs)
+            Debug.Log($"<color=green>[DivisionManager] ? Coroutine iniciada exitosamente</color>");
     }
 
     IEnumerator DividePlayerCoroutine(Vector3 divisionPoint, bool isHorizontalSplit, float separationDistance)
     {
         isDivided = true;
+
+        if (showDebugLogs)
+            Debug.Log("[DivisionManager] Coroutine iniciada - desactivando jugador principal");
 
         // Desactivar el jugador principal
         mainPlayer.SetPlayerControl(false);
@@ -112,6 +181,9 @@ public class DivisionManager : MonoBehaviour
     {
         isDivided = true;
 
+        if (showDebugLogs)
+            Debug.Log("[DivisionManager] Coroutine iniciada (posiciones específicas) - desactivando jugador principal");
+
         // Desactivar el jugador principal
         mainPlayer.SetPlayerControl(false);
         mainPlayer.HidePlayer();
@@ -122,16 +194,22 @@ public class DivisionManager : MonoBehaviour
 
     IEnumerator CreateHalves(Vector3 posA, Vector3 posB, Quaternion rotation)
     {
+        if (showDebugLogs)
+            Debug.Log($"[DivisionManager] Creando mitades en posiciones: A={posA}, B={posB}");
+
         // Crear las mitades
         halfA = Instantiate(halfCubePrefab, posA, rotation);
         halfB = Instantiate(halfCubePrefab, posB, rotation);
+
+        if (showDebugLogs)
+            Debug.Log($"[DivisionManager] Mitades instanciadas: halfA={halfA != null}, halfB={halfB != null}");
 
         scriptA = halfA.GetComponent<MoveDividedCube>();
         scriptB = halfB.GetComponent<MoveDividedCube>();
 
         if (scriptA == null || scriptB == null)
         {
-            Debug.LogError("Los prefabs de mitad necesitan el componente MoveDividedCube");
+            Debug.LogError($"[DivisionManager] Los prefabs de mitad necesitan el componente MoveDividedCube - scriptA={scriptA != null}, scriptB={scriptB != null}");
             yield break;
         }
 
@@ -141,12 +219,18 @@ public class DivisionManager : MonoBehaviour
         scriptA.otherHalf = scriptB;
         scriptB.otherHalf = scriptA;
 
+        if (showDebugLogs)
+            Debug.Log("[DivisionManager] Scripts configurados correctamente");
+
         // Aplicar materiales
         UpdateVisuals();
 
         yield return new WaitForSeconds(0.1f);
 
         activeHalf = 0;
+
+        if (showDebugLogs)
+            Debug.Log("<color=green>[DivisionManager] División completada exitosamente!</color>");
     }
 
     void SwitchActiveHalf()
@@ -159,6 +243,9 @@ public class DivisionManager : MonoBehaviour
         scriptB.isActive = (activeHalf == 1);
 
         UpdateVisuals();
+
+        if (showDebugLogs)
+            Debug.Log($"[DivisionManager] Cambiado a mitad {(activeHalf == 0 ? "A" : "B")}");
     }
 
     void UpdateVisuals()
@@ -204,6 +291,8 @@ public class DivisionManager : MonoBehaviour
 
                 if (xzDistance > 0.5f && xzDistance < mergeDistance)
                 {
+                    if (showDebugLogs)
+                        Debug.Log("[DivisionManager] Condiciones de merge cumplidas - iniciando unión");
                     MergeHalves();
                 }
             }
@@ -215,7 +304,7 @@ public class DivisionManager : MonoBehaviour
         if (!isDivided) return;
 
         Vector3 midPoint = (halfA.transform.position + halfB.transform.position) / 2f;
-        midPoint.y += 0.5f;
+        midPoint.y = 1.20148f;
 
         // Calcular la orientación basada en la posición de las mitades
         Vector3 offset = halfA.transform.position - halfB.transform.position;
@@ -228,13 +317,15 @@ public class DivisionManager : MonoBehaviour
         {
             // Alineados en el eje X
             targetRotation = Quaternion.Euler(0, 90, 0);
-            Debug.Log("Mitades alineadas en eje X - rotación 90°");
+            if (showDebugLogs)
+                Debug.Log("[DivisionManager] Mitades alineadas en eje X - rotación 90°");
         }
         else
         {
             // Alineados en el eje Z
             targetRotation = Quaternion.Euler(0, 0, 0);
-            Debug.Log("Mitades alineadas en eje Z - rotación 0°");
+            if (showDebugLogs)
+                Debug.Log("[DivisionManager] Mitades alineadas en eje Z - rotación 0°");
         }
 
         mainPlayer.transform.position = midPoint;
@@ -251,7 +342,8 @@ public class DivisionManager : MonoBehaviour
 
         isDivided = false;
 
-        Debug.Log($"¡Mitades unidas! Posición: {midPoint}, Rotación: {targetRotation.eulerAngles}");
+        if (showDebugLogs)
+            Debug.Log($"<color=green>[DivisionManager] ¡Mitades unidas! Posición: {midPoint}, Rotación: {targetRotation.eulerAngles}</color>");
     }
 
 
@@ -280,6 +372,8 @@ public class DivisionManager : MonoBehaviour
         // Método útil para debug o mecánicas especiales
         if (isDivided)
         {
+            if (showDebugLogs)
+                Debug.Log("[DivisionManager] ForceMerge llamado");
             MergeHalves();
         }
     }
