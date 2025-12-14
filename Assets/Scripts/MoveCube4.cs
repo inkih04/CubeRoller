@@ -11,6 +11,11 @@ public class MoveCube : MonoBehaviour
 {
     public static MoveCube Instance;
 
+    [SerializeField] private float inputCooldown = 0.05f;
+    private float inputCooldownTimer = 0f;
+    private bool waitingForCooldown = false;
+
+
     [Header("Configuración Bloxorz")]
     public float rotSpeed = 300f;
     public float fallSpeed = 10f;
@@ -383,6 +388,17 @@ public class MoveCube : MonoBehaviour
             return;
         }
 
+        if (waitingForCooldown)
+        {
+            inputCooldownTimer -= Time.deltaTime;
+            if (inputCooldownTimer <= 0f)
+            {
+                waitingForCooldown = false;
+                inputProcessed = false;
+            }
+            return;
+        }
+
         if (controlsActive)
         {
             HandleInput();
@@ -396,6 +412,12 @@ public class MoveCube : MonoBehaviour
             inputProcessed = false;
             return;
         }
+
+        if (waitingForCooldown)
+        {
+            return;
+        }
+
 
         if (!IsGroundedAdvanced())
         {
@@ -483,6 +505,9 @@ public class MoveCube : MonoBehaviour
             step = degreesToRotate - currentRotated;
             transform.RotateAround(pivot, rotAxis, step * rotationDirection);
             isMoving = false;
+
+            waitingForCooldown = true;
+            inputCooldownTimer = inputCooldown;
 
             if (ghostPlayer != null)
             {
