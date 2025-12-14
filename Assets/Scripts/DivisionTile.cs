@@ -11,6 +11,10 @@ public class DivisionTile : MonoBehaviour
     [SerializeField] private Transform spawnPointA;
     [SerializeField] private Transform spawnPointB;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip buttonSound;
+    [SerializeField][Range(0f, 1f)] private float soundVolume = 1f;
+
     private bool isCheckingInProgress = false;
     private float originalCylinderHeight;
     private Vector3 originalCylinderPosition;
@@ -102,6 +106,12 @@ public class DivisionTile : MonoBehaviour
 
     private void PressedTile(GameObject player)
     {
+
+        if (buttonSound != null)
+        {
+            AudioSource.PlayClipAtPoint(buttonSound, transform.position, soundVolume);
+        }
+
         if (boxCollider != null)
         {
             boxCollider.enabled = false;

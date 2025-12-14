@@ -4,16 +4,22 @@ using System.Collections;
 public class BridgeButton2 : MonoBehaviour
 {
     [SerializeField] private Transform cylinder;
-    [SerializeField] private GameObject[] targetTiles; 
-    [SerializeField] private GameObject[] oppositeTiles; 
+    [SerializeField] private GameObject[] targetTiles;
+    [SerializeField] private GameObject[] oppositeTiles;
     [SerializeField] private float cylinderDescendAmount = 0.1f;
     [SerializeField] private float cylinderResetTime = 1f;
+
+
+    [Header("Audio")]
+    [SerializeField] private AudioClip buttonSound; 
+    [SerializeField][Range(0f, 1f)] private float soundVolume = 1f; 
+
 
     private float originalCylinderHeight;
     private Vector3 originalCylinderPosition;
     private BoxCollider boxCollider;
-    private bool isPressed = false; 
-    private bool canBePressed = true; 
+    private bool isPressed = false;
+    private bool canBePressed = true;
     private Coroutine resetCoroutine;
 
     private void Start()
@@ -28,28 +34,19 @@ public class BridgeButton2 : MonoBehaviour
         originalCylinderPosition = cylinder.localPosition;
         boxCollider = GetComponent<BoxCollider>();
 
-
         foreach (GameObject tile in targetTiles)
         {
-            if (tile != null)
-            {
-                SetTileVisibility(tile, true);
-            }
+            if (tile != null) SetTileVisibility(tile, true);
         }
-
 
         foreach (GameObject tile in oppositeTiles)
         {
-            if (tile != null)
-            {
-                SetTileVisibility(tile, false);
-            }
+            if (tile != null) SetTileVisibility(tile, false);
         }
     }
 
     private void OnTriggerEnter(Collider collision)
     {
-
         if (collision.CompareTag("Player") && canBePressed && !isPressed)
         {
             PressButton();
@@ -58,7 +55,6 @@ public class BridgeButton2 : MonoBehaviour
 
     private void OnTriggerExit(Collider collision)
     {
-
         if (collision.CompareTag("Player") && isPressed)
         {
             if (resetCoroutine != null)
@@ -74,13 +70,18 @@ public class BridgeButton2 : MonoBehaviour
         isPressed = true;
         canBePressed = false;
 
-  
+
+        if (buttonSound != null)
+        {
+            AudioSource.PlayClipAtPoint(buttonSound, transform.position, soundVolume);
+        }
+
+
         if (cylinder != null)
         {
             Vector3 newScale = cylinder.localScale;
             newScale.y -= cylinderDescendAmount;
             cylinder.localScale = newScale;
-
 
             cylinder.localPosition = new Vector3(
                 cylinder.localPosition.x,
@@ -89,7 +90,6 @@ public class BridgeButton2 : MonoBehaviour
             );
         }
 
-
         ToggleTargetTiles();
 
         Debug.Log("Botón presionado: " + gameObject.name);
@@ -97,9 +97,7 @@ public class BridgeButton2 : MonoBehaviour
 
     private IEnumerator ResetButtonAfterDelay()
     {
-
         yield return new WaitForSeconds(cylinderResetTime);
-
 
         if (cylinder != null)
         {
@@ -123,27 +121,17 @@ public class BridgeButton2 : MonoBehaviour
         {
             if (tile != null)
             {
- 
                 bool isCurrentlyVisible = IsTileVisible(tile);
-
-
                 SetTileVisibility(tile, !isCurrentlyVisible);
-
-                Debug.Log("Tile " + tile.name + " - Visibilidad cambiada a: " + !isCurrentlyVisible);
             }
         }
-
 
         foreach (GameObject tile in oppositeTiles)
         {
             if (tile != null)
             {
-
                 bool isCurrentlyVisible = IsTileVisible(tile);
-
                 SetTileVisibility(tile, !isCurrentlyVisible);
-
-                Debug.Log("Tile opuesto " + tile.name + " - Visibilidad cambiada a: " + !isCurrentlyVisible);
             }
         }
     }
@@ -151,36 +139,22 @@ public class BridgeButton2 : MonoBehaviour
     private bool IsTileVisible(GameObject tile)
     {
         MeshRenderer meshRenderer = tile.GetComponent<MeshRenderer>();
-        if (meshRenderer != null)
-        {
-            return meshRenderer.enabled;
-        }
-
+        if (meshRenderer != null) return meshRenderer.enabled;
         return false;
     }
 
     private void SetTileVisibility(GameObject tile, bool visible)
     {
-
         MeshRenderer meshRenderer = tile.GetComponent<MeshRenderer>();
-        if (meshRenderer != null)
-        {
-            meshRenderer.enabled = visible;
-        }
+        if (meshRenderer != null) meshRenderer.enabled = visible;
 
         Collider tileCollider = tile.GetComponent<Collider>();
-        if (tileCollider != null)
-        {
-            tileCollider.enabled = visible;
-        }
+        if (tileCollider != null) tileCollider.enabled = visible;
     }
 
     public void ManualReset()
     {
-        if (resetCoroutine != null)
-        {
-            StopCoroutine(resetCoroutine);
-        }
+        if (resetCoroutine != null) StopCoroutine(resetCoroutine);
 
         if (cylinder != null)
         {
@@ -197,18 +171,12 @@ public class BridgeButton2 : MonoBehaviour
 
         foreach (GameObject tile in targetTiles)
         {
-            if (tile != null)
-            {
-                SetTileVisibility(tile, true);
-            }
+            if (tile != null) SetTileVisibility(tile, true);
         }
 
         foreach (GameObject tile in oppositeTiles)
         {
-            if (tile != null)
-            {
-                SetTileVisibility(tile, false);
-            }
+            if (tile != null) SetTileVisibility(tile, false);
         }
     }
 }

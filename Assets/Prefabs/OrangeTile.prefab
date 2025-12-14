@@ -240,3 +240,5 @@ MonoBehaviour:
   fallDelay: 0.1
   fallSpeed: 5
   destroyAfterSeconds: 0
+  buttonSound: {fileID: 8300000, guid: eb1f9d378a3deb94e8062261628c4f4a, type: 3}
+  soundVolume: 1
