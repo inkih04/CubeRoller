@@ -9,6 +9,7 @@ TagManager:
   - MoveCounter
   - GhostTileV
   - GhostTileH
+  - HalfPlayer
   layers:
   - Default
   - TransparentFX

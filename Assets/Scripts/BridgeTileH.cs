@@ -22,7 +22,7 @@ public class BridgeTileH : MonoBehaviour
 
     private void OnTriggerEnter(Collider collision)
     {
-        if (collision.CompareTag("Player") && !hasBeenPressed)
+        if ((collision.CompareTag("Player") || collision.CompareTag("HalfPlayer")) && !hasBeenPressed)
         {
             PressedTile();
         }

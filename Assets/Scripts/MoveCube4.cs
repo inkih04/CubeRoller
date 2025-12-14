@@ -303,16 +303,13 @@ public class MoveCube : MonoBehaviour
 
         if (!isVictory && transform.position.y < -5f)
         {
-            // ========== AÑADE ESTAS LÍNEAS ==========
-            // Resetear el DivisionManager cuando el jugador cae
+
             if (DivisionManager.Instance != null)
             {
                 DivisionManager.Instance.ResetDivision();
             }
 
-            // Resetear todos los tiles de división
             DivisionTile.ResetAllDivisionTiles();
-            // ========== FIN DE LÍNEAS NUEVAS ==========
 
             LevelSequenceManager manager = FindObjectOfType<LevelSequenceManager>();
             if (manager != null)
