@@ -13,9 +13,13 @@ public class LevelSequenceManager : MonoBehaviour
     public LevelMapAnimator levelAnimator;
 
     [Header("Animation Settings")]
-    public float tileDropHeight = 20f;   
-    public float tileExitDepth = 20f;   
-    public float tileSpeed = 25f;        
+    public float tileDropHeight = 20f;
+
+    // HE AUMENTADO ESTE VALOR DE 20f A 100f PARA QUE CAIGAN MUCHO MÁS ABAJO
+    public float tileExitDepth = 100f;
+
+    // Puedes aumentar ligeramente la velocidad si al caer de uno en uno se hace lento
+    public float tileSpeed = 40f;
     public float startDelay = 1f;
 
     private void Start()
@@ -38,7 +42,6 @@ public class LevelSequenceManager : MonoBehaviour
     {
         yield return new WaitForSeconds(startDelay);
 
- 
         float t = 0;
         while (t < 1)
         {
@@ -47,10 +50,8 @@ public class LevelSequenceManager : MonoBehaviour
             yield return null;
         }
 
-
         if (levelAnimator != null)
             yield return StartCoroutine(levelAnimator.AnimateMapFall(tileSpeed));
-
 
         if (MoveCube.Instance != null)
             MoveCube.Instance.SpawnPlayerFromSky(tileDropHeight);
@@ -64,12 +65,10 @@ public class LevelSequenceManager : MonoBehaviour
 
     IEnumerator RestartSequence()
     {
-
         if (levelAnimator != null)
             yield return StartCoroutine(levelAnimator.AnimateMapDrop(tileExitDepth, tileSpeed));
 
-        yield return new WaitForSeconds(0.2f); 
-
+        yield return new WaitForSeconds(0.2f);
 
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
