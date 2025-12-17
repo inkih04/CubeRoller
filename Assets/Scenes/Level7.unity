@@ -1278,8 +1278,8 @@ MonoBehaviour:
   levelTitleText: {fileID: 937397657}
   levelAnimator: {fileID: 42978051}
   tileDropHeight: 20
-  tileExitDepth: 20
-  tileSpeed: 25
+  tileExitDepth: 100
+  tileSpeed: 35
   startDelay: 1
 --- !u!4 &469956101
 Transform:

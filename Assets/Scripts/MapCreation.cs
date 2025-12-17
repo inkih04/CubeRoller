@@ -14,10 +14,21 @@ public class LevelMapAnimator : MonoBehaviour
 
     void Awake()
     {
-
         foreach (Transform child in transform)
         {
             tiles.Add(new TileData { transform = child, originalPosition = child.position });
+        }
+    }
+
+    // Función auxiliar para desordenar la lista (Shuffle)
+    private void ShuffleTiles()
+    {
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            TileData temp = tiles[i];
+            int randomIndex = Random.Range(i, tiles.Count);
+            tiles[i] = tiles[randomIndex];
+            tiles[randomIndex] = temp;
         }
     }
 
@@ -30,52 +41,72 @@ public class LevelMapAnimator : MonoBehaviour
         }
     }
 
-
     public IEnumerator AnimateMapFall(float speed)
     {
-        bool allTilesLanded = false;
-        while (!allTilesLanded)
+        ShuffleTiles(); // Desordenamos las tiles para que caigan aleatoriamente
+        int activeAnimations = 0;
+
+        foreach (var tile in tiles)
         {
-            allTilesLanded = true;
-            foreach (var tile in tiles)
+            if (tile.transform != null)
             {
-                if (tile.transform == null) continue;
-                if (Vector3.Distance(tile.transform.position, tile.originalPosition) > 0.01f)
-                {
-                    tile.transform.position = Vector3.MoveTowards(tile.transform.position, tile.originalPosition, speed * Time.deltaTime);
-                    allTilesLanded = false;
-                }
-                else
-                {
-                    tile.transform.position = tile.originalPosition;
-                }
+                activeAnimations++;
+                // Iniciamos la caída individual de esta tile
+                StartCoroutine(MoveTileToTarget(tile, tile.originalPosition, speed, () => activeAnimations--));
+
+                // Esperamos un tiempo aleatorio muy breve antes de lanzar la siguiente
+                yield return new WaitForSeconds(Random.Range(0.005f, 0.02f));
             }
+        }
+
+        // Esperamos a que todas hayan terminado
+        while (activeAnimations > 0)
+        {
             yield return null;
         }
     }
 
-
     public IEnumerator AnimateMapDrop(float dropDepth, float speed)
     {
-        bool allTilesGone = false;
+        ShuffleTiles(); // Desordenamos para que caigan al vacío de forma caótica
+        int activeAnimations = 0;
+        // Usamos una profundidad mucho mayor si es necesario, calculada desde su origen
         float targetY = -dropDepth;
 
-        while (!allTilesGone)
+        foreach (var tile in tiles)
         {
-            allTilesGone = true;
-            foreach (var tile in tiles)
+            if (tile.transform != null)
             {
-                if (tile.transform == null) continue;
-
+                activeAnimations++;
+                // Calculamos el destino muy abajo
                 Vector3 targetPos = new Vector3(tile.originalPosition.x, targetY, tile.originalPosition.z);
 
-                if (tile.transform.position.y > targetY + 0.1f)
-                {
-                    tile.transform.position = Vector3.MoveTowards(tile.transform.position, targetPos, speed * Time.deltaTime);
-                    allTilesGone = false;
-                }
+                StartCoroutine(MoveTileToTarget(tile, targetPos, speed, () => activeAnimations--));
+
+                // Retraso aleatorio entre caídas
+                yield return new WaitForSeconds(Random.Range(0.005f, 0.02f));
             }
+        }
+
+        while (activeAnimations > 0)
+        {
             yield return null;
         }
+    }
+
+    // Corrutina individual para mover una sola pieza
+    private IEnumerator MoveTileToTarget(TileData tile, Vector3 target, float speed, System.Action onComplete)
+    {
+        while (tile.transform != null && Vector3.Distance(tile.transform.position, target) > 0.01f)
+        {
+            tile.transform.position = Vector3.MoveTowards(tile.transform.position, target, speed * Time.deltaTime);
+            yield return null;
+        }
+
+        if (tile.transform != null)
+        {
+            tile.transform.position = target;
+        }
+        onComplete?.Invoke();
     }
 }
