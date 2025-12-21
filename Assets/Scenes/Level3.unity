@@ -3134,7 +3134,7 @@ MonoBehaviour:
   rotSpeed: 150
   fallSpeed: 2
   fallRotationSpeed: 180
-  maxFallRotation: 70
+  maxFallRotation: 120
   fallRespawnTime: 5
   showOrientationDebug: 1
   ghostPlayer: {fileID: 1321530892}

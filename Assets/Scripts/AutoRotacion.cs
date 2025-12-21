@@ -3,8 +3,8 @@ using UnityEngine;
 public class AutoRotacion : MonoBehaviour
 {
     [Header("Ajustes")]
-    public float velocidadGiro = 30f; // Velocidad de rotación
-    public Vector3 ejeRotacion = Vector3.up; // Eje Y (hacia arriba)
+    public float velocidadGiro = 30f; 
+    public Vector3 ejeRotacion = Vector3.up; 
 
     void Update()
     {

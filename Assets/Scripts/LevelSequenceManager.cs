@@ -15,16 +15,16 @@ public class LevelSequenceManager : MonoBehaviour
     [Header("Animation Settings")]
     public float tileDropHeight = 20f;
 
-    // HE AUMENTADO ESTE VALOR DE 20f A 100f PARA QUE CAIGAN MUCHO MÁS ABAJO
+
     public float tileExitDepth = 100f;
 
-    // Puedes aumentar ligeramente la velocidad si al caer de uno en uno se hace lento
+
     public float tileSpeed = 40f;
     public float startDelay = 1f;
 
     private void Start()
     {
-        // Setup Inicial
+ 
         if (MoveCube.Instance != null) MoveCube.Instance.HidePlayer();
 
         if (blackScreenGroup != null)

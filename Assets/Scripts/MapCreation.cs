@@ -20,7 +20,7 @@ public class LevelMapAnimator : MonoBehaviour
         }
     }
 
-    // Función auxiliar para desordenar la lista (Shuffle)
+
     private void ShuffleTiles()
     {
         for (int i = 0; i < tiles.Count; i++)
@@ -43,7 +43,7 @@ public class LevelMapAnimator : MonoBehaviour
 
     public IEnumerator AnimateMapFall(float speed)
     {
-        ShuffleTiles(); // Desordenamos las tiles para que caigan aleatoriamente
+        ShuffleTiles(); 
         int activeAnimations = 0;
 
         foreach (var tile in tiles)
@@ -51,15 +51,15 @@ public class LevelMapAnimator : MonoBehaviour
             if (tile.transform != null)
             {
                 activeAnimations++;
-                // Iniciamos la caída individual de esta tile
+
                 StartCoroutine(MoveTileToTarget(tile, tile.originalPosition, speed, () => activeAnimations--));
 
-                // Esperamos un tiempo aleatorio muy breve antes de lanzar la siguiente
+
                 yield return new WaitForSeconds(Random.Range(0.005f, 0.02f));
             }
         }
 
-        // Esperamos a que todas hayan terminado
+
         while (activeAnimations > 0)
         {
             yield return null;
@@ -68,9 +68,9 @@ public class LevelMapAnimator : MonoBehaviour
 
     public IEnumerator AnimateMapDrop(float dropDepth, float speed)
     {
-        ShuffleTiles(); // Desordenamos para que caigan al vacío de forma caótica
+        ShuffleTiles(); 
         int activeAnimations = 0;
-        // Usamos una profundidad mucho mayor si es necesario, calculada desde su origen
+
         float targetY = -dropDepth;
 
         foreach (var tile in tiles)
@@ -78,12 +78,12 @@ public class LevelMapAnimator : MonoBehaviour
             if (tile.transform != null)
             {
                 activeAnimations++;
-                // Calculamos el destino muy abajo
+
                 Vector3 targetPos = new Vector3(tile.originalPosition.x, targetY, tile.originalPosition.z);
 
                 StartCoroutine(MoveTileToTarget(tile, targetPos, speed, () => activeAnimations--));
 
-                // Retraso aleatorio entre caídas
+
                 yield return new WaitForSeconds(Random.Range(0.005f, 0.02f));
             }
         }
@@ -94,7 +94,7 @@ public class LevelMapAnimator : MonoBehaviour
         }
     }
 
-    // Corrutina individual para mover una sola pieza
+
     private IEnumerator MoveTileToTarget(TileData tile, Vector3 target, float speed, System.Action onComplete)
     {
         while (tile.transform != null && Vector3.Distance(tile.transform.position, target) > 0.01f)

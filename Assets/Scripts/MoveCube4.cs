@@ -103,7 +103,7 @@ public class MoveCube : MonoBehaviour
             return;
         }
 
-        // Resetear estados
+
         isVictory = false;
         isMoving = false;
         isFalling = false;
@@ -115,7 +115,7 @@ public class MoveCube : MonoBehaviour
         transform.position = Vector3.up * 50f;
         this.enabled = true;
 
-        // Ocultar jugador inicialmente
+
         HidePlayer();
 
         GameObject counterGO = GameObject.FindGameObjectWithTag("MoveCounter");
