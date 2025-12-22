@@ -135,10 +135,11 @@ public class DivisionTile : MonoBehaviour
 
         if (currentDivisionManager != null && spawnPointA != null && spawnPointB != null && playerScript != null)
         {
+
             currentDivisionManager.DividePlayerAtPositions(
                 spawnPointA.position,
                 spawnPointB.position,
-                playerScript.transform.rotation
+                Quaternion.identity  
             );
         }
         else
